@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { IListModelResponse } from '../../interfaces/responses/IListModelResponse';
 import { OllamaService } from '../../services/OllamaService';
 import mockRunningModelsInfos from '../../__mocks__/mockRunningModelsInfos';
+import { IListModelResponse } from '../../interfaces/responses/OllamaResponseTypes';
 
 const mockModelsListResponse: IListModelResponse = {
     models: [

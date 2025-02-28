@@ -124,11 +124,11 @@ describe('AgentService', () => {
       })
     })
 
-    it('should return undefined when fetch fails', async () => {
-      mockFetch.mockRejectedValueOnce(new Error('Network error'))
-
-      const result = await new AgentService().getAll()
-      expect(result).toBeUndefined()
+    it('should handle the error when fetch fails', async () => {
+      mockFetch.mockResolvedValueOnce({ ok: false, status: 500 })
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      await expect(new AgentService().getAll()).rejects.toThrow('HTTP error! status: 500')
+      expect(consoleSpy).toHaveBeenCalled()
     })
   })
 

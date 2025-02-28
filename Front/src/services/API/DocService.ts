@@ -66,7 +66,7 @@ export default class DocService{
             const response = await fetch("/backend/docs/bySimilarity", {
                 method: "POST",
                 headers: { "Content-Type": "application/json", },
-                body : JSON.stringify({ query,  embeddings : DocProcessorService.normalizeVector(queryEmbeddings), targetFilesNames })
+                body : JSON.stringify({ query,  embedding : DocProcessorService.normalizeVector(queryEmbeddings), targetFilesNames })
             })
 
             if (!response.ok) {

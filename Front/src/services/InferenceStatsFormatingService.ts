@@ -1,5 +1,5 @@
 import { IInferenceStats } from "../interfaces/IConversation"
-import { ICompletionResponse } from "../interfaces/responses/ICompletionResponse"
+import { ICompletionResponse } from "../interfaces/responses/OllamaResponseTypes"
 
 class InferenceStatsFormatingService{
     static extractStats(response : ICompletionResponse){

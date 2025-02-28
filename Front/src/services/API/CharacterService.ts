@@ -1,7 +1,8 @@
 import ICharacterSettings from "../../interfaces/ICharacterSettings"
+import ICharacterResponse from "../../interfaces/responses/ICharacterResponse"
 
 class CharacterService{
-    async getAll(){
+    async getAll() : Promise<ICharacterResponse[]>{
         try {
             const response = await fetch("/backend/characters", {
                 method: "GET",
@@ -16,7 +17,7 @@ class CharacterService{
             
         } catch (error) {
             console.error("Error fetching characters list : ", error)
-            return undefined
+            throw error
         }
     }
 
@@ -35,7 +36,7 @@ class CharacterService{
             
         } catch (error) {
             console.error("Error fetching character settings : ", error)
-            return undefined
+            throw error
         }
     }
 

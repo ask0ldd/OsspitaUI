@@ -116,10 +116,7 @@ describe('ConversationService', () => {
     it('should handle errors when fetching all fails', async () => {
       mockFetch.mockResolvedValueOnce({ ok: false, status: 500 })
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-      const result = await ConversationService.getAll()
-
-      expect(result).toBeUndefined()
+      await expect(ConversationService.getAll()).rejects.toThrow('HTTP error! status: 500')
       expect(consoleSpy).toHaveBeenCalled()
     })
   })

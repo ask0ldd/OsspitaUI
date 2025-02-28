@@ -1,0 +1,193 @@
+.topIGContainer {
+  width: 100%;
+  height: 74px;
+  min-height: 74px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .topBar {
+    padding: 1rem;
+    height: 48px;
+    background: linear-gradient(
+      to bottom,
+      #ffffff66,
+      var(--base-container-background-color)
+    );
+    border: 1px solid #ffffffaa;
+    box-shadow: 0 2px 4px hsla(251, 50%, 32%, 0.04),
+      0 6px 12px -2px hsla(251, 50%, 32%, 0.1);
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+  }
+}
+
+main {
+  .bodyTextBotBarContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: calc(100vh - 74px);
+    max-height: calc(100vh - 74px);
+    row-gap: 12px;
+  }
+
+  .workflowJSONnTitleContainer {
+    border: 1px solid #b4bddf;
+    display: flex;
+    width: 50%;
+    max-width: 50%;
+    color: #e0d8ee;
+    border-radius: 6px 0 0 0;
+    font-size: 14px;
+    overflow: hidden;
+    flex-direction: column;
+
+    .leftTitle {
+      height: 2.5rem;
+      flex-shrink: 0;
+      width: 100%;
+      color: rgba(132, 144, 179, 0.933);
+      font-size: 16px;
+      font-weight: 500;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(
+        to bottom,
+        #ffffff66,
+        var(--base-container-background-color)
+      );
+    }
+
+    .workflowJSONContainer {
+      display: flex;
+      width: 100%;
+      flex-shrink: 0;
+      background: linear-gradient(to bottom, #6a5081, #5b4d7d);
+      color: #e0d8ee;
+      justify-content: left;
+      align-items: flex-start;
+      text-align: left;
+      padding: 1rem;
+      flex: 1;
+      overflow-y: auto;
+      font-size: 14px;
+      scrollbar-width: thin;
+    }
+  }
+
+  .workflowTablenTitleContainer {
+    border: 1px solid #b4bddf;
+    border-left: none;
+    display: flex;
+    width: 50%;
+    max-width: 50%;
+    color: #e0d8ee;
+    border-radius: 0 6px 0 0;
+    font-size: 14px;
+    overflow: hidden;
+    flex-direction: column;
+
+    .rightTitle {
+      height: 2.5rem;
+      flex-shrink: 0;
+      width: 100%;
+      color: rgba(132, 144, 179, 0.933);
+      font-size: 16px;
+      font-weight: 500;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(
+        to bottom,
+        #ffffff66,
+        var(--base-container-background-color)
+      );
+    }
+
+    .workflowTableContainer {
+      background: #e2e6f3;
+      border-left: none;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      padding: 1rem;
+      scrollbar-width: thin;
+      border-top: 1px solid #b4bddf;
+      height: 100%;
+
+      li {
+        color: #252525;
+      }
+    }
+  }
+
+  textarea.positivePrompt {
+    background: #fcfcfe;
+    height: 150px;
+    min-height: 150px;
+  }
+
+  .progressSendContainer {
+    flex: 0 0 48px;
+    width: 100%;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: row;
+    column-gap: 12px;
+
+    button.sendButton {
+      height: 100%;
+      background: linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0) 15%,
+          rgba(255, 255, 255, 0.15) 50%
+        ),
+        var(--purple-button-color);
+      color: #fff;
+      font-weight: 500;
+      width: 200px;
+      flex-shrink: 0;
+
+      &:hover {
+        background: var(--purple-button-hover-background-color);
+        border: 1px solid var(--purple-button-hover-border-color);
+        box-shadow: 0 2px 0px #fff;
+      }
+    }
+
+    .progressBarContainer {
+      display: flex;
+      flex: 1 1 100%;
+      height: 100%;
+      align-items: center;
+      background: hsl(245, 20%, 43%);
+      border: 1px solid hsl(245, 23%, 58%);
+      box-shadow: 0 1px 0px #fff, inset 0 1px 4px #00000077;
+      width: 100%;
+      border-radius: 6px;
+      color: #fff;
+      overflow: hidden;
+
+      .progressBar {
+        width: 50%;
+        height: 100%;
+        background: url("../assets/progressstripes.png"),
+          var(--purple-button-color);
+        /*linear-gradient(to bottom, #39f8cf, #39f8f8);*/
+        background-repeat: repeat-x;
+        background-size: auto 100%;
+        animation: moveBackground 15s linear infinite;
+        box-shadow: inset 0 1px 3px #ffffff55, inset 0 -1px 4px #00000055,
+          3px 0 6px #6d48c155;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+    }
+  }
+}

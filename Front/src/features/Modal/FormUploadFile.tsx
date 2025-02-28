@@ -24,7 +24,7 @@ export function FormUploadFile({memoizedSetModalStatus, setForceLeftPanelRefresh
         const correctedFilesize = filesize * 1000 / 1100 // taking into account the fact that some spaces are lost
         // file splitting then embedding each chunk of text
         const textChunks = DocProcessorService.splitTextIntoChunks(content, 600)
-        const textEmbeddings : {text : string, embeddings : number[]}[] = []
+        const textEmbeddings : {text : string, embedding : number[]}[] = []
         for(const chunk of textChunks) {
             const chunkEmbeddings = await DocProcessorService.getEmbeddingsForChunk(chunk)
             textEmbeddings.push({...chunkEmbeddings})

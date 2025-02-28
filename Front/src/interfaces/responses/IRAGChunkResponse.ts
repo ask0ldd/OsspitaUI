@@ -1,5 +1,5 @@
 export default interface IRAGChunkResponse{
     text : string
-    embeddings : number[]
+    embedding : number[]
     similarity : number
 }

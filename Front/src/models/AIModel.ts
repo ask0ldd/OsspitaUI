@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-private-class-members */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { ICompletionResponse } from "../interfaces/responses/ICompletionResponse"
 import { IEmbeddingResponse } from "../interfaces/responses/IEmbeddingResponse"
 import { IAIModelParams } from "../interfaces/params/IAIModelParams"
 import visionModelsClues from "../constants/VisionModelsClues"
+import { ICompletionResponse } from "../interfaces/responses/OllamaResponseTypes"
 
 /**
  * @class AIModel
@@ -51,9 +51,7 @@ export class AIModel{
     #use_mmap = true
     #use_mlock = false
     #num_thread = 8
-
-
-    
+   
     // add keep alive!!!!!
     // add format : json
 
@@ -166,7 +164,17 @@ export class AIModel{
         }
     }
 
-    async askForAStreamedResponse(prompt : string, images : string[] = []) : Promise<ReadableStreamDefaultReader<Uint8Array>>{
+    /**
+     * @param {string} prompt - The prompt to send to the model.
+     * @param {string[]} [images=[]] - An optional array of image URLs or base64 encoded images.
+     * @returns {Promise<ReadableStreamDefaultReader<Uint8Array>>} A promise that resolves to a ReadableStreamDefaultReader.
+     * @throws {Error} Throws an error if no image is provided for vision models.
+     * @throws {Error} Throws an error if the HTTP response is not ok.
+     * @throws {Error} Throws an error if the response body cannot be read.
+     * @throws {Error} Rethrows any caught errors, including AbortError.
+     * @description Sends a request to the Ollama API for a streamed response. Supports both text and vision models.
+     */
+    async askForAStreamedResponse(prompt : string, images : string[] = []) : Promise<ReadableStreamDefaultReader<string/*Uint8Array*/>>{
         try {
             if(visionModelsClues.some(clue => this.#modelName.toLowerCase().includes(clue)) && images.length < 1) throw new Error("No image provided / selected.")
 
@@ -181,14 +189,12 @@ export class AIModel{
                 // keepalive: true
             })
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`)
-            }
+            if (!response.ok)  throw new Error(`HTTP error! status: ${response.status}`)
 
-            const reader = response.body?.getReader()
-            if (!reader) {
-                throw new Error("Failed to read response body.")
-            }
+            if(!response.body) throw new Error("Failed to read response body.")
+
+            const reader = this.#consolidateStream(response.body).getReader()
+
             return reader
 
         } catch (error) {
@@ -206,6 +212,44 @@ export class AIModel{
             console.error(error)
             throw error
         }
+    }
+
+    /**
+     * Consolidates and fixes incomplete or concatenated chunks in a ReadableStream.
+     * 
+     * @param {ReadableStream} originalStream - The original stream to be consolidated.
+     * @returns {ReadableStream<string>} A new ReadableStream with consolidated and fixed chunks.
+     * @private
+     */
+    #consolidateStream(originalStream: ReadableStream): ReadableStream<string> {
+        console.log("consolidate")
+        return new ReadableStream({
+            start(controller: ReadableStreamDefaultController) {
+                const reader = originalStream.getReader()
+                const textDecoder = new TextDecoder()
+                
+                async function pump(): Promise<void> {
+                    const { done, value } = await reader.read()
+                    if (done) {
+                        controller.close()
+                        return
+                    }
+
+                    let decodedValue = textDecoder.decode(value, { stream: true })
+
+                    if(decodedValue.includes('"done":true') && !decodedValue.trim().endsWith("}")) 
+                        decodedValue = await StreamConsolidator.malformedEndingValueReconstructor(decodedValue, reader, textDecoder)
+    
+                    // check if the decoded value isn't malformed -> fix it if it is
+                    const reconstructedValue = StreamConsolidator.malformedValueReconstructor(decodedValue)
+
+                    controller.enqueue(reconstructedValue)
+                    return pump()
+                }
+                
+                return pump()
+            }
+        })
     }
 
     /**
@@ -280,7 +324,7 @@ export class AIModel{
      * @returns {string} The request body for the AI model.
      * @description Builds the request body for the AI model with the given prompt and other parameters.
      */
-    #buildRequest({prompt, stream} : {prompt : string, stream : boolean}) : string {
+    #buildRequest({prompt, stream, outputFormat} : {prompt : string, stream : boolean, outputFormat? : string}) : string {
         const baseRequest : IBaseOllamaRequest = {
             "model": this.#modelName,
             "stream": stream,
@@ -288,6 +332,16 @@ export class AIModel{
             "prompt": prompt,
             "context" : [...this.#context],
         }
+
+        /* https://ollama.com/blog/structured-outputs
+        const request = outputFormat ? {...baseRequest,
+            "format" : {
+                "type": "object",
+                "properties": outputFormat
+            },
+            "required" : [output]
+        } : baseRequest*/
+
         const requestWithOptions = {...baseRequest, 
             "options": this.getPartialOptions()
         }
@@ -341,6 +395,8 @@ export class AIModel{
         this.#abortController = new AbortController()
         this.#signal = this.#abortController.signal
     }
+
+    //#region Getters & Setters
 
     /**
      * @function setSystemPrompt
@@ -676,6 +732,8 @@ export class AIModel{
         return this.#num_thread;
     }
 
+    //#endregion
+
     asString(){
         return JSON.stringify({
             modelName: this.#modelName,
@@ -763,6 +821,8 @@ export class AIModel{
     }
 }
 
+type TReadableStreamValue = Uint8Array<ArrayBufferLike> | undefined;
+
 interface IBaseRequest{
     model: string
     stream: boolean
@@ -777,4 +837,86 @@ export interface IBaseOllamaRequest extends IBaseRequest{
 
 interface IBaseVisionOllamaRequest extends IBaseRequest {
     images: string[]
+}
+
+interface IOllamaChunk {
+    model : string
+    created_at : string
+    response : string
+    done : boolean
+}
+
+class StreamConsolidator{
+    // close all split chunks on both ends if needed
+    static #bracingChunk(unsafeChunk: string){
+        const trimmedValue = unsafeChunk.trim()
+        return (trimmedValue.startsWith('{') ? '' : '{') +
+            trimmedValue +
+        (trimmedValue.endsWith('}') ? '' : '}')
+    }
+
+    // parse all split chunks and aggregate the response value
+    static #mergeChunks(bracedChunks : string[]){
+        let reconstructedValue = ''
+        let isDone = false
+        let lastChunk
+    
+        for (const chunk of bracedChunks) {
+            const parsedChunk = JSON.parse(chunk)
+            reconstructedValue += parsedChunk.response
+            // if one of the malformed chunk is the {..., done : true } chunk
+            // then the reconstructed chunk becomes a {..., done : true } chunk itself
+            isDone = isDone || parsedChunk.done
+            lastChunk = parsedChunk
+        }
+    
+        return {
+            ...lastChunk,
+            response: reconstructedValue,
+            done: isDone
+        }
+    }
+
+    // split one malformed block into multiple ones if needed
+    static malformedValueReconstructor(value : string | null) : string{
+      try{
+        // console.log("untouchedValue : " + value)
+        if(value == null) return JSON.stringify({"model":"","created_at":"","response":" ","done":false})
+        // try splitting the chunk into multiple ones
+        const unsafeChunks = value.split("}\n{")
+        if(unsafeChunks.length == 1) return value.trim()
+        // close all split chunks on both ends if needed
+        const bracedChunks = unsafeChunks.map(this.#bracingChunk)
+        // parse all split chunks and aggregate the response value
+        const aggregatedChunk = this.#mergeChunks(bracedChunks)
+        // console.log("rebuilt : " + JSON.stringify(aggregatedChunk))
+        return JSON.stringify(aggregatedChunk)
+      } catch (error) {
+        // this.abortAgentLastRequest()
+        console.error(`Can't reconstruct these values : ` + JSON.stringify(value))
+        throw error
+      }
+    }
+
+    /* memo : decodedValue structure : {"model":"qwen2.5:3b","created_at":"2024-09-29T15:14:02.9781312Z","response":" also","done":false} */
+    // deal with the very last datas chunk being unexpectedly split into partial chunks
+    static async malformedEndingValueReconstructor(value : string, reader : ReadableStreamDefaultReader<Uint8Array>, decoder : TextDecoder) : Promise<string>{
+      let nextChunk = ""
+      let decodedValue = value
+      while(true){
+        console.log("trying to add subsequent value")
+        // try retrieving the next partial chunk to see if it is enough to rebuild a complete chunk
+        nextChunk = decoder.decode((await reader.read()).value)
+        if(nextChunk == null) {
+          // if the chunk can't be reconstructed despite the stream coming to and end
+          // -> a chunk with an empty context is returned
+          decodedValue = decodedValue.split(',"context"')[0] + ',"context":[]}'
+          break
+        }
+        decodedValue += nextChunk
+        // if with this addition the chunk is now complete, break the loop
+        if(decodedValue.trim().endsWith("}")) break
+      }
+      return decodedValue
+    }
 }

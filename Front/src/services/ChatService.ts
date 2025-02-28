@@ -95,140 +95,71 @@ export class ChatService{
     }
 
     static async askTheActiveAgentForAStreamedResponse({
-      question, 
-      chunkProcessorCallback, 
-      context = [], 
-      scrapedPages, 
-      images} : IAskedStreamedResponseParameters) : Promise<{newContext :number[], inferenceStats : IInferenceStats}>
+        question, 
+        chunkProcessorCallback, 
+        context = [], 
+        scrapedPages, 
+        images} : IAskedStreamedResponseParameters) : Promise<{newContext :number[], inferenceStats : IInferenceStats}>
     {
-      if(this.activeAgent == null) throw new Error(`Agent is not available`)
+        if(this.activeAgent == null) throw new Error(`Agent is not available`)
 
-      // this.FUPQuestionsGeneration = images && images.length > 0 ? false : true
+        // this.FUPQuestionsGeneration = images && images.length > 0 ? false : true
 
-      this.setCurrentlyUsedAgent(this.activeAgent)
+        this.setCurrentlyUsedAgent(this.activeAgent)
 
-      let newContext = []
-      let inferenceStats : IInferenceStats = {
-        promptEvalDuration : 0,
-        inferenceDuration : 0,
-        modelLoadingDuration : 0,
-        wholeProcessDuration : 0,
-        tokensGenerated : 0,
-        promptTokensEval : 0,
-      }
-
-      this.activeAgent.setContext(context)
-      const concatenatedWebDatas = scrapedPages ? scrapedPages.reduce((acc, currentPage)=> acc + '\n\n' + currentPage.datas, "When replying to **MY REQUEST**, always consider the following datas as superseeding your training datas : ") : ""
-      // console.log('CONCATENATED : ' + concatenatedWebDatas)
-      const availableContextForWebDatas = this.activeAgent.getContextSize()
-      const webDatasSizedForAvailableContext = concatenatedWebDatas.substring(0, availableContextForWebDatas)
-      // the agent receive an amount of scraped datas matching the context size available
-
-      let content = ""
-      let decodedValueSave = ""
-      let decodedValue = ""
-      const textDecoder = new TextDecoder()
-      try{
-          const reader = await this.activeAgent.askForAStreamedResponse(webDatasSizedForAvailableContext + '\n\n<MYREQUEST>' + question + '</MYREQUEST>', images)
-
-          while(true){
-              const { value } = await reader.read()
-              decodedValue = textDecoder.decode(value)
-              decodedValueSave = decodedValue
-
-              // deal with the very last datas chunk being unexpectedly split into partial chunks
-              if(decodedValue.includes('"done":true') && !decodedValue.trim().endsWith("}")) 
-                  decodedValue = await this.#malformedEndingValueReconstructor(decodedValue, reader, textDecoder)
-
-              // check if the decoded value isn't malformed -> fix it if it is
-              const reconstructedValue = this.#malformedValueReconstructor(decodedValue)
-
-              // const reconstructedValue = await this.rebuildMalformedChunksOptimized(decodedValue, reader, textDecoder)
-
-              const json = JSON.parse(reconstructedValue)
-
-              if(json.done) {
-                newContext = json.context || []
-                inferenceStats = InferenceStatsFormatingService.extractStats(json)
-                content += json.response
-                chunkProcessorCallback({markdown : content, html : await AnswerFormatingService.format(content)})
-                break
-              }
-          
-              if (!json.done) {
-                content += json.response
-                chunkProcessorCallback({markdown : content, html : await AnswerFormatingService.format(content)})
-              }
-          }
-          this.abortAgentLastRequest()
-      } catch (error) {
-          if (error instanceof Error && error.name === 'AbortError') {
-            console.error('Stream aborted.')
-          } else {
-            console.error('Stream failed : ', error)
-            if(decodedValueSave) console.error(decodedValueSave)
-          }
-          throw error
-      }
-
-      return { newContext : scrapedPages ? [] : newContext, inferenceStats }
-    }
-
-    // split one malformed block into multiple ones if needed
-    static #malformedValueReconstructor(value : string | null) : string{
-      try{
-        // console.log("untouchedValue : " + value)
-        if(value == null) return JSON.stringify({"model":"","created_at":"","response":" ","done":false})
-        // try splitting the chunk into multiple ones
-        const splitValues = value.split("}\n{")
-        if(splitValues.length == 1) return value.trim()
-        // close all split chunks on both ends if needed
-        const bracedValues = splitValues.map(value => {
-          let trimmedValue = value.trim()
-          if(!trimmedValue.startsWith("{")) trimmedValue = "{" + trimmedValue
-          if(!trimmedValue.endsWith("}")) trimmedValue = trimmedValue + "}"
-          return trimmedValue
-        })
-        // parse all split chunks and aggregate the response value
-        const reconstructedValue = bracedValues.reduce((acc, value) => acc + JSON.parse(value).response, "")
-        // if one of the malformed chunk is the {..., done : true } chunk
-        // then the reconstructed chunk becomes a {..., done : true } chunk itself
-        const isDone = bracedValues.reduce((acc, value) => acc || JSON.parse(value).done, false)
-        const aggregatedChunk = {...JSON.parse(bracedValues[bracedValues.length-1])}
-        aggregatedChunk.response = reconstructedValue
-        aggregatedChunk.done = isDone
-        // console.log("rebuilt : " + JSON.stringify(aggregatedChunk))
-        return JSON.stringify(aggregatedChunk)
-      } catch (error) {
-        // this.abortAgentLastRequest()
-        console.error(`Can't reconstruct these values : ` + JSON.stringify(value))
-        throw error
-      }
-    }
-
-    /* memo : decodedValue structure : {"model":"qwen2.5:3b","created_at":"2024-09-29T15:14:02.9781312Z","response":" also","done":false} */
-    // deal with the very last datas chunk being unexpectedly split into partial chunks
-    static async #malformedEndingValueReconstructor(value : string, reader : ReadableStreamDefaultReader<Uint8Array>, decoder : TextDecoder) : Promise<string>{
-      let nextChunk = ""
-      let decodedValue = value
-      while(true){
-        console.log("trying to add subsequent value")
-        // try retrieving the next partial chunk to see if it is enough to rebuild a complete chunk
-        nextChunk = decoder.decode((await reader.read()).value)
-        if(nextChunk == null) {
-          // if the chunk can't be reconstructed despite the stream coming to and end
-          // -> a chunk with an empty context is returned
-          decodedValue = decodedValue.split(',"context"')[0] + ',"context":[]}'
-          break
+        let newContext = []
+        let inferenceStats : IInferenceStats = {
+            promptEvalDuration : 0,
+            inferenceDuration : 0,
+            modelLoadingDuration : 0,
+            wholeProcessDuration : 0,
+            tokensGenerated : 0,
+            promptTokensEval : 0,
         }
-        decodedValue += nextChunk
-        // if with this addition the chunk is now complete, break the loop
-        if(decodedValue.trim().endsWith("}")) break
-      }
-      return decodedValue
+
+        this.activeAgent.setContext(context)
+        const concatenatedWebDatas = scrapedPages ? scrapedPages.reduce((acc, currentPage)=> acc + '\n\n' + currentPage.datas, "When replying to **MY REQUEST**, always consider the following datas as superseeding your training datas : ") : ""
+        const availableContextForWebDatas = this.activeAgent.getContextSize()
+        const webDatasSizedForAvailableContext = concatenatedWebDatas.substring(0, availableContextForWebDatas)
+        // the agent receive an amount of scraped datas matching the context size available
+
+        let content = ""
+        try{
+            const reader = await this.activeAgent.askForAStreamedResponse(webDatasSizedForAvailableContext + '\n\n<MYREQUEST>' + question + '</MYREQUEST>', images)
+
+            while(true){
+                const { value } = await reader.read()
+                if(!value) break
+                const json = JSON.parse(value)
+
+                if(json.done) {
+                    newContext = json.context || []
+                    inferenceStats = InferenceStatsFormatingService.extractStats(json)
+                    content += json.response
+                    chunkProcessorCallback({markdown : content, html : await AnswerFormatingService.format(content)})
+                    break
+                }
+            
+                if (!json.done) {
+                    content += json.response
+                    chunkProcessorCallback({markdown : content, html : await AnswerFormatingService.format(content)})
+                }
+            }
+            this.abortAgentLastRequest()
+        } catch (error) {
+            if (error instanceof Error && error.name === 'AbortError') {
+                console.error('Stream aborted.')
+            } else {
+                console.error('Stream failed : ', error)
+                // if(decodedValueSave) console.error(decodedValueSave)
+            }
+            throw error
+        }
+
+        return { newContext : scrapedPages ? [] : newContext, inferenceStats }
     }
 
-    static async rebuildMalformedChunksOptimized(value : string, reader : ReadableStreamDefaultReader<Uint8Array>, decoder : TextDecoder) : Promise<string>
+    /*static async rebuildMalformedChunksOptimized(value : string, reader : ReadableStreamDefaultReader<Uint8Array>, decoder : TextDecoder) : Promise<string>
     {
       // retrieve as many chunks as needed for the string to reach a closing bracket
       let aggregatedChunks = value.trim()
@@ -256,7 +187,7 @@ export class ChatService{
         const baseAggregateChunk = JSON.stringify({"model":"","created_at":"","response":" ","done":false})
         return baseAggregateChunk.replace(`"response":" "`, `"response":${JSON.stringify(allReponsesValues.join(""))}`)
       }
-    }
+    }*/
 
     static abortAgentLastRequest(){
       if(this.activeAgent != null) this.activeAgent.abortLastRequest()

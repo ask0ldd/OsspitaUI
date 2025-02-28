@@ -19,5 +19,5 @@ export default DefaultSlotButtonsGroup
 
 interface IProps{
     handlePageChange : (direction: "next" | "prev") => void
-    children: React.ReactNode
+    children?: React.ReactNode
 }

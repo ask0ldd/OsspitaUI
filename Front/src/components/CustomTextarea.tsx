@@ -37,11 +37,9 @@ const CustomTextarea = React.memo(() => {
     }
     
     return(
-        <>
-            <div className="textAreaContainer">
-                <textarea ref={textareaRef} id="mainTextArea" spellCheck="false" onInput={(e) => handleInput((e.target as HTMLTextAreaElement).value)} value={textareaValue}></textarea>
-            </div>
-        </>
+        <div className="textAreaContainer">
+            <textarea ref={textareaRef} id="mainTextArea" spellCheck="false" onInput={(e) => handleInput((e.target as HTMLTextAreaElement).value)} value={textareaValue}></textarea>
+        </div>
     )
 })
 

@@ -12,6 +12,7 @@
     "coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@radix-ui/react-slider": "^1.2.2",
     "@xyflow/react": "^12.3.4",
     "highlight.js": "^11.10.0",
     "mammoth": "^1.8.0",
@@ -20,6 +21,7 @@
     "react-dom": "^18.3.1",
     "react-pdf": "^9.1.1",
     "react-router-dom": "^6.26.1",
+    "sentence-splitter": "^5.0.0",
     "xlsx": "^0.18.5",
     "zustand": "^5.0.1"
   },

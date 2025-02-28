@@ -1,6 +1,6 @@
 export default interface IEmbedChunkedDoc{
     text : string
-    embeddings : number[]
+    embedding : number[]
     metadatas : IDocMetadatas
 }
 

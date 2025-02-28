@@ -1,7 +1,5 @@
-import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/react/dont-cleanup-after-each'
 import { userEvent } from '@testing-library/user-event'
-import Chat from '../../pages/Chat';
 import { OllamaService } from '../../services/OllamaService';
 import { render, screen, waitFor, act, cleanup } from '@testing-library/react';
 import {describe, beforeEach, vi, expect, test, afterEach } from 'vitest';
@@ -16,12 +14,9 @@ import mockRunningModelsInfos from '../../__mocks__/mockRunningModelsInfos';
 import AIAgentChain from '../../models/AIAgentChain';
 import mockLLMResponse from '../../__mocks__/mockLLMResponse';
 import AgentService from '../../services/API/AgentService';
-
-const MockedRouter = () => (
-    <MemoryRouter>
-      <Chat />
-    </MemoryRouter>
-);
+import mockConversationsList from '../../__mocks__/mockConversationsList';
+import ConversationService from '../../services/API/ConversationService';
+import { MockedRouter } from '../../__mocks__/mockedRouter';
 
 const mockVoices = [
     { name: 'Voice 1', lang: 'en-US' },
@@ -41,6 +36,7 @@ describe('Given I am on the Chat page', () => {
         vi.spyOn(AIAgentChain, 'process').mockResolvedValue(mockLLMResponse)
         vi.spyOn(DocService, 'getAll').mockResolvedValue(mockRAGDocumentsList)
         vi.spyOn(PromptService.prototype, 'getAll').mockResolvedValue(mockPromptsList)
+        vi.spyOn(ConversationService, 'getAll').mockResolvedValue([mockConversationsList[0], mockConversationsList[1], mockConversationsList[2]])
         vi.stubGlobal('speechSynthesis', {
             getVoices: vi.fn().mockReturnValue(mockVoices),
         });

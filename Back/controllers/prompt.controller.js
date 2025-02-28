@@ -69,6 +69,12 @@ const updatePromptById = (db) => async (req, res) => {
     if (promptToUpdate) {
       // Update existing agent
       Object.assign(promptToUpdate, req.body)
+      const newPromptHistory = [{
+        text : req.body.prompt,
+        version : 1,
+        createdAt: new Date().toISOString(),
+      }]
+      promptToUpdate = {...promptToUpdate, prompts: newPromptHistory, name : req.body.name }
       await promptsCollection.update(promptToUpdate)
 
       // applying the previous actions to the database
@@ -118,11 +124,16 @@ const updatePromptByName = (db) => async (req, res) => {
     if (promptToUpdate) {
       // Update existing agent
       Object.assign(promptToUpdate, req.body)
-      const newPromptHistory = promptToUpdate.prompts.map(prompt => {
+      /*const newPromptHistory = promptToUpdate.prompts.map(prompt => {
         if(prompt.version === req.body.version) return ({
           text : req.body.prompt
         })
-      })
+      })*/
+      const newPromptHistory = [{
+        text : req.body.prompt,
+        version : 1,
+        createdAt: new Date().toISOString(),
+      }]
       promptToUpdate = {...promptToUpdate, prompts: newPromptHistory, name : req.body.name }
       await promptsCollection.update(promptToUpdate)
 

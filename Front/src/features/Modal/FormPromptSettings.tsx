@@ -5,11 +5,11 @@ import './FormPromptSettings.css'
 import useFetchPrompt from "../../hooks/useFetchPrompt.ts"
 import { useServices } from "../../hooks/useServices.ts"
 
-export function FormPromptSettings({memoizedSetModalStatus, selectedPromptNameRef, setForceLeftPanelRefresh, role} : IProps){
+export function FormPromptSettings({memoizedSetModalStatus, selectedPromptNameRef, setForceLeftPanelRefresh, role} : TProps){
 
-    const {promptService} = useServices()
+    const {promptService, imagePromptService} = useServices()
 
-    const { prompt, setPrompt } = useFetchPrompt(selectedPromptNameRef?.current)
+    const { prompt, setPrompt } = role == "edit" ? useFetchPrompt(selectedPromptNameRef?.current, "edit") : useFetchPrompt(selectedPromptNameRef?.current, "editImageGen")
     const [error, setError] = useState("")
 
     useEffect(() => {
@@ -23,6 +23,10 @@ export function FormPromptSettings({memoizedSetModalStatus, selectedPromptNameRe
         memoizedSetModalStatus({visibility : false})
     }
 
+    function isEditMode(){
+        return role == "edit" || role == "editImageGen"
+    }
+
     function handleSaveClick(e: React.MouseEvent<HTMLButtonElement>){
         e.preventDefault()
         if(!isFormValid()) return // !!! error message missing
@@ -32,13 +36,24 @@ export function FormPromptSettings({memoizedSetModalStatus, selectedPromptNameRe
         if(role == "create") {
             promptService.save(formValues.name, formValues.prompt)
         }
+        if(role == "createImageGen") {
+            imagePromptService.save(formValues.name, formValues.prompt)
+        }
+        if(role == "editImageGen"){
+            imagePromptService.updateByName(prompt.name, { newName : formValues.name, prompt : formValues.prompt, version : formValues.currentVersion })
+        }
         if(setForceLeftPanelRefresh) setForceLeftPanelRefresh(prev => prev + 1)
         memoizedSetModalStatus({visibility  : false})
     }
 
     function handleDeleteClick(e : React.MouseEvent){
         e.preventDefault()
-        if(prompt.id) promptService.deleteById(prompt.id)
+        if(role == "edit") {
+            if(prompt.id) promptService.deleteById(prompt.id)
+        }
+        if(role == "editImageGen") {
+            if(prompt.id) imagePromptService.deleteById(prompt.id)
+        }
         if(setForceLeftPanelRefresh) setForceLeftPanelRefresh(prev => prev + 1)
         memoizedSetModalStatus({visibility  : false})
     }
@@ -69,7 +84,7 @@ export function FormPromptSettings({memoizedSetModalStatus, selectedPromptNameRe
 
     return(
     <div className="formNHistoryContainer">
-        {role == "edit" && <div className="historyContainer">
+        {isEditMode() && <div className="historyContainer">
             <h3>Prompt History <span style={{fontWeight:'400'}}>(Coming soon)</span></h3>
             <div className="historyTable">
                 <div className="historyHeader">
@@ -87,7 +102,7 @@ export function FormPromptSettings({memoizedSetModalStatus, selectedPromptNameRe
         <form className="prompt-form">
         <div style={{marginBottom:"14px", width:"100%", display:"flex", justifyContent:"space-between"}}>
             <div className="labelErrorContainer"><label id="label-name" style={{margin:0}}>Name</label>{error.includes("name") && <span>{error}</span>}</div>
-            {role == "edit" && <span style={{marginLeft:'auto', fontWeight:'500', width:'calc(40px * 4 + 8px * 3)', textAlign:'left'}}>Actions</span>}
+            {isEditMode() && <span style={{marginLeft:'auto', fontWeight:'500', width:'calc(40px * 4 + 8px * 3)', textAlign:'left'}}>Actions</span>}
         </div>
         <div className="nameNOptionsWrapper">
             <input aria-labelledby="label-name" 
@@ -97,7 +112,7 @@ export function FormPromptSettings({memoizedSetModalStatus, selectedPromptNameRe
                 value={formValues.name} 
                 onChange={(e) => setFormValues(formValues => ({...formValues, name : e.target?.value}))}
             />
-            {role == "edit" && 
+            {isEditMode() && 
             <>
                 <button onClick={(e) => e.preventDefault()} style={{marginLeft:'auto', opacity:'0.4', cursor:'auto'}} title="coming soon">
                     <svg style={{transform:'translateY(1px)'}} width="20" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -157,8 +172,22 @@ interface IProps{
     memoizedSetModalStatus : ({visibility, contentId} : {visibility : boolean, contentId? : string}) => void
     selectedPromptNameRef? : React.MutableRefObject<string>
     setForceLeftPanelRefresh : React.Dispatch<React.SetStateAction<number>>
-    role : "edit" | "create"
+    role : "edit" | "create" | "createImageGen" | "editImageGen"
 }
+
+type TProps = {
+    memoizedSetModalStatus: ({ visibility, contentId }: { visibility: boolean; contentId?: string }) => void;
+    setForceLeftPanelRefresh: React.Dispatch<React.SetStateAction<number>>;
+  } & (
+    | {
+        role: "edit" | "editImageGen";
+        selectedPromptNameRef: React.MutableRefObject<string>;
+      }
+    | {
+        role: "create" | "createImageGen";
+        selectedPromptNameRef?: never;
+      }
+  );
 
 interface IFormStructure {
     name : string

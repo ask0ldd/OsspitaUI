@@ -37,7 +37,7 @@ describe('DocService', () => {
       const mockResponse = { ok: true }
       mockFetch.mockResolvedValueOnce(mockResponse)
 
-      const processedDoc : IEmbedChunkedDoc[] = [{ text: 'test', embeddings: [0.1, 0.2, 0.3], metadatas : {filename : 'test.tsx', filesize : 10000} }]
+      const processedDoc : IEmbedChunkedDoc[] = [{ text: 'test', embedding: [0.1, 0.2, 0.3], metadatas : {filename : 'test.tsx', filesize : 10000} }]
       await DocService.saveDocWithEmbeddings(processedDoc)
 
       expect(global.fetch).toHaveBeenCalledWith(
@@ -55,7 +55,7 @@ describe('DocService', () => {
 
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      const processedDoc : IEmbedChunkedDoc[] = [{ text: 'test', embeddings: [0.1, 0.2, 0.3], metadatas : {filename : 'test.tsx', filesize : 10000} }]
+      const processedDoc : IEmbedChunkedDoc[] = [{ text: 'test', embedding: [0.1, 0.2, 0.3], metadatas : {filename : 'test.tsx', filesize : 10000} }]
       await DocService.saveDocWithEmbeddings(processedDoc)
 
       expect(consoleErrorSpy).toHaveBeenCalled()
@@ -121,7 +121,7 @@ describe('DocService', () => {
 
   describe('getRAGResults', () => {
     it('should successfully fetch RAG results', async () => {
-      const mockRAGResults : IRAGChunkResponse[] = [{ text: 'test', embeddings : [1, 2, 3], similarity : 0.9 }]
+      const mockRAGResults : IRAGChunkResponse[] = [{ text: 'test', embedding : [1, 2, 3], similarity : 0.9 }]
       const mockResponse = { ok: true, json: () => Promise.resolve(mockRAGResults) }
       mockFetch.mockResolvedValueOnce(mockResponse)
 

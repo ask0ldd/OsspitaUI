@@ -5,6 +5,9 @@ import { WebSearchService } from '../services/WebSearchService';
 import { TTSService } from '../services/TTSService';
 import ImageService from '../services/API/ImageService';
 import CharacterService from '../services/API/CharacterService';
+import ComfyUIService from '../services/ComfyUIService';
+import ImageGenWorkflowService from '../services/API/imageGen/imageGenWorkflowService';
+import ImageGenPromptService from '../services/API/imageGen/ImageGenPromptService';
 
 export interface ServicesContextType {
   agentService: AgentService
@@ -13,6 +16,9 @@ export interface ServicesContextType {
   ttsService : TTSService
   imageService : ImageService
   characterService : CharacterService
+  comfyUIService : ComfyUIService
+  workflowService : ImageGenWorkflowService
+  imagePromptService : ImageGenPromptService
 }
 
 const defaultContextValue: ServicesContextType = {
@@ -22,16 +28,12 @@ const defaultContextValue: ServicesContextType = {
   ttsService : new TTSService(),
   imageService : new ImageService(),
   characterService : new CharacterService(),
+  comfyUIService : new ComfyUIService(),
+  workflowService : new ImageGenWorkflowService(),
+  imagePromptService : new ImageGenPromptService(),
 };
 
-export const ServicesContext = createContext<ServicesContextType>({
-  agentService: new AgentService(),
-  promptService: new PromptService(),
-  webSearchService: new WebSearchService(),
-  ttsService : new TTSService(),
-  imageService : new ImageService(),
-  characterService : new CharacterService(),
-});
+export const ServicesContext = createContext<ServicesContextType>(defaultContextValue);
 
 interface ServicesProviderProps {
   children: ReactNode;

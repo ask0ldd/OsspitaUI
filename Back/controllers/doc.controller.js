@@ -17,10 +17,10 @@ const getDocsChunksBySimilarity = (vdb) => async (req, res) => {
   try {
     console.log("Fetching docs by similarity.")
 
-    const { query, embeddings, targetFilesNames} = req.body
+    const { query, embedding, targetFilesNames} = req.body
     // console.log("embeddings : " + JSON.stringify(embeddings))
     if(targetFilesNames.length < 1) return res.setHeader("Access-Control-Allow-Origin", "*").status(200).json([])
-    const RAGTopKResults = await vdb.search(embeddings, targetFilesNames)
+    const RAGTopKResults = await vdb.search(embedding, targetFilesNames)
 
     return res.setHeader("Access-Control-Allow-Origin", "*").status(200).json((RAGTopKResults)/*.map((doc)=> doc.text)*/)
 

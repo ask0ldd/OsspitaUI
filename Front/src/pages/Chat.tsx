@@ -13,8 +13,6 @@ import LeftPanel from "../features/LeftPanel/LeftPanel";
 import RightPanel from "../features/RightPanel/RightPanel";
 import LoadedModelInfosBar from "../components/LoadedModelInfosBar";
 import useModalManager from "../hooks/useModalManager";
-import { useStreamingState } from "../hooks/useStreamingState";
-import { useWebSearchState } from "../hooks/useWebSearchState";
 import { FormPromptSettings } from "../features/Modal/FormPromptSettings";
 import { IInferenceStats } from "../interfaces/IConversation";
 import ErrorAlert from "../features/Modal/ErrorAlert";
@@ -36,8 +34,10 @@ import { useScrollbar } from "../hooks/useScrollbar";
 import ConversationService from "../services/API/ConversationService";
 import ScrapedPage from "../models/ScrapedPage";
 import Snackbar from "../components/Snackbar";
-import { TRightMenuOptions } from "../interfaces/TRightMenuOptions";
 import FormCharacterSettings from "../features/Modal/FormCharacterSettings";
+import { isAbortError } from "../utils/typeguards";
+import { useOptionsContext } from "../hooks/context/useOptionsContext";
+import { useStreamingContext } from "../hooks/context/useStreamingContext";
 
 function Chat() {
 
@@ -47,15 +47,15 @@ function Chat() {
 
     const { getSelectedImages } = useImagesStore()
     const { webSearchService, imageService } = useServices();
+    const { activeConversationId, activeMode, setActiveMode } = useOptionsContext()
+    const { isStreaming, setIsStreaming, isStreamingRef } = useStreamingContext()
 
     const { AIAgentsList, triggerAIAgentsListRefresh } = useFetchAgentsList()
-    
-    const { isStreaming, isStreamingRef, setIsStreaming } = useStreamingState()
 
     // Active Conversation Management
     // Manages the state and context of the current active conversation
     // Used for displaying chat history and handling conversation selection
-    const { activeConversationId, setActiveConversationId, dispatch, activeConversationStateRef } = useActiveConversationReducer({name : "First Conversation", history : [], lastAgentUsed  : "", lastModelUsed : ""});
+    const { dispatch, activeConversationStateRef } = useActiveConversationReducer({name : "First Conversation", history : [], lastAgentUsed  : "", lastModelUsed : ""});
 
     // Auto-scroll Reference
     // Ref used to enable auto-scrolling feature during response streaming
@@ -67,7 +67,10 @@ function Chat() {
 
     // Main textarea management
     const { setTextareaValue, textareaRef } = useMainTextAreaStore()
-    useKeyboardListener(textareaRef, handlePressEnterKey, activeConversationId.value, activeConversationStateRef.current.history[activeConversationStateRef.current.history.length - 1]?.context || [])
+    function isConversationsHistoryEmpty(){
+        return !(activeConversationStateRef.current.history?.length > 0)
+    }
+    useKeyboardListener(textareaRef, handlePressEnterKey, activeConversationId.value, isConversationsHistoryEmpty() ? activeConversationStateRef.current.history[activeConversationStateRef.current.history.length - 1]?.context : [])
 
     // Modal management
     // Handles modal visibility and content switching
@@ -77,12 +80,13 @@ function Chat() {
     // Used by the modal to populate the prompt form
     const selectedPromptNameRef = useRef("")
 
-    const {isWebSearchActivated, isWebSearchActivatedRef, setWebSearchActivated} = useWebSearchState()
+    // !!!ddd const {isWebSearchActivated, isWebSearchActivatedRef, setWebSearchActivated} = useWebSearchState()
+    const {isWebSearchActivated, isWebSearchActivatedRef, setWebSearchActivated} = useOptionsContext()
     const [isFollowUpQuestionsClosed, setIsFollowUpQuestionsClosed] = useState<boolean>(false)
 
     const {activeMenuItem, setActiveMenuItem, activeMenuItemRef} = useRightMenu()
 
-    // Effect hook for handling conversation switches
+    // Handling conversation switches
     // Aborts ongoing streaming, resets UI state, and loads the selected conversation
     useEffect(() => {
         // Abort any ongoing streaming when switching conversations
@@ -94,8 +98,7 @@ function Chat() {
 
     const lastRAGResultsRef = useRef<IRAGChunkResponse[] | null>(null)
 
-    
-    const [activeMode, setActiveMode] = useState<TRightMenuOptions | "web" | "rag">("agent")
+    // !!! move to context
     useEffect(() => {
         if(activeMenuItemRef.current == "agent" && !isWebSearchActivated) {
             setActiveMode("agent")
@@ -160,9 +163,9 @@ function Chat() {
             if (isWebSearchActivatedRef.current == true && activeMenuItemRef.current == "agent") {
                 // web search unavailable when a vision model is active
                 if(ChatService.isAVisionModelActive()) throw new Error("Web search not available when a vision model is selected.")
-                console.log("***Web Search***")
+                console.log("___Web Search___")
                 scrapedPages = await webSearchService.scrapeRelatedDatas({query, maxPages : 3}) || (() => { throw new Error("No results found for your query") })()
-                console.log("***LLM Loading***")
+                console.log("___LLM Loading___")
                 // format YYYY/MM/DD
                 const currentDate = "Current date : " + new Date().getFullYear() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getDate() + ". "
                 const finalDatas = await ChatService.askTheActiveAgentForAStreamedResponse({question : currentDate + query, chunkProcessorCallback : onStreamedChunkReceived_Callback, context : currentContext, scrapedPages}) // convert to object and add : showErrorModal : (errorMessage: string) => void
@@ -176,7 +179,7 @@ function Chat() {
                 })
             } else {
                 // Use internal knowledge without web search
-                console.log("***LLM Loading***")
+                console.log("___LLM Loading___")
 
                 const isVisionModelActive = ChatService.isAVisionModelActive()
                 
@@ -230,7 +233,8 @@ function Chat() {
 
             // Abort requests shouldn't display any error modale
             if((JSON.stringify(error)).includes("abort")) return 
-            if(error instanceof Error && (error.name === "AbortError" || error.name.includes("abort") || error.message.includes("Signal"))) return 
+            // if(error instanceof Error && (error.name === "AbortError" || error.name.includes("abort") || error.message.includes("Signal"))) return 
+            if(isAbortError(error)) return
 
             ChatService.abortAgentLastRequest()
             showErrorModal("Stream failed. " + (error instanceof Error ? error.message : error))
@@ -253,7 +257,8 @@ function Chat() {
                 agentUsed : AIAgentChain.getLastAgent().getName(),
                 modelUsed : AIAgentChain.getLastAgent().getModelName()}
             })
-            const response = await AIAgentChain.process(query) || (() => { throw new Error("The chain failed to produce a response.") })()
+            const response = await AIAgentChain.process(query) 
+            if(response == null) throw new Error("The chain failed to produce a response.")
             const answerAsHTML = await AnswerFormatingService.format(response.response)
             dispatch({ type: ActionType.UPDATE_LAST_HISTORY_ELEMENT_ANSWER, payload : {html : answerAsHTML, markdown : response.response}})
             if((textareaRef.current as HTMLTextAreaElement).value == activeConversationStateRef.current.history.slice(-1)[0].question) setTextareaValue("")
@@ -267,7 +272,7 @@ function Chat() {
             activeConv.history[activeConv.history.length-1].answer = {asHTML : answerAsHTML, asMarkdown : response.response}
             await ConversationService.updateById(activeConversationId.value, activeConv)
             return
-        }catch (error : unknown) {
+        }catch(error : unknown) {
             dispatch({ type: ActionType.DELETE_LAST_HISTORY_ELEMENT })
             AIAgentChain.abortProcess()
             console.error(error)
@@ -349,11 +354,7 @@ function Chat() {
         {/* key={"lp-" + forceLeftPanelRefresh} */}
         <LeftPanel 
             forceLeftPanelRefresh={forceLeftPanelRefresh} 
-            isWebSearchActivated={isWebSearchActivated}
-            setWebSearchActivated={setWebSearchActivated}
             activeConversationStateRef={activeConversationStateRef} 
-            activeConversationId={activeConversationId.value} 
-            setActiveConversationId={setActiveConversationId} 
             dispatch={dispatch} 
             memoizedSetModalStatus={memoizedSetModalStatus} 
             selectedPromptNameRef={selectedPromptNameRef}/>
@@ -365,17 +366,15 @@ function Chat() {
             <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }} ref={historyContainerRef}> {/* element needed for scrolling*/}
                 {<ChatHistory 
                     activeConversationState={activeConversationStateRef.current} 
-                    isStreaming={isStreaming} 
                     setTextareaValue={setTextareaValue} 
                     regenerateLastAnswer={regenerateLastAnswer}
-                    activeConversationId={activeConversationId.value}
-                    />}
+                    isStreaming={isStreaming}
+                />}
             </div>
 
             <div className="stickyBottomContainer">
                 <CustomTextarea/>
-                {!isFollowUpQuestionsClosed && <FollowUpQuestions historyElement={activeConversationStateRef.current.history[activeConversationStateRef.current.history.length - 1]}
-                    isStreaming={isStreaming} 
+                {!isFollowUpQuestionsClosed && <FollowUpQuestions historyElement={isConversationsHistoryEmpty() ? activeConversationStateRef.current.history[activeConversationStateRef.current.history.length - 1] : undefined}
                     selfClose={setIsFollowUpQuestionsClosed} isFollowUpQuestionsClosed={isFollowUpQuestionsClosed}/>}
                 
                 <div className="sendStatsWebSearchContainer">
@@ -386,10 +385,10 @@ function Chat() {
                         </div>
                     </div>
                     <div className="infosBottomContainer" onClick={() => console.log(JSON.stringify(lastRAGResultsRef.current))}>
-                        <div>Model Loading : { (nanosecondsToSeconds(activeConversationStateRef.current.inferenceStats?.modelLoadingDuration || 0)).toFixed(2) } s</div>
-                        <div className="infoItemDisappearLowWidth">Prompt : { Math.min(100, ((activeConversationStateRef.current.inferenceStats?.promptTokensEval || 0) / nanosecondsToSeconds((activeConversationStateRef.current.inferenceStats?.promptEvalDuration || 1)))).toFixed(2) } tk/s</div>
-                        <div className="infoItemDisappearLowWidth">Inference : { ((activeConversationStateRef.current.inferenceStats?.tokensGenerated || 0) / nanosecondsToSeconds((activeConversationStateRef.current.inferenceStats?.inferenceDuration || 1))).toFixed(2) } tk/s</div>
-                        <div>Full Process : { (nanosecondsToSeconds(activeConversationStateRef.current.inferenceStats?.wholeProcessDuration || 0)).toFixed(2) } s</div>
+                        <div>Model Loading : { (nanosecondsToSeconds(activeConversationStateRef.current.inferenceStats?.modelLoadingDuration ?? 0)).toFixed(2) } s</div>
+                        <div className="infoItemDisappearLowWidth">Prompt : { Math.min(100, ((activeConversationStateRef.current.inferenceStats?.promptTokensEval ?? 0) / nanosecondsToSeconds((activeConversationStateRef.current.inferenceStats?.promptEvalDuration ?? 1)))).toFixed(2) } tk/s</div>
+                        <div className="infoItemDisappearLowWidth">Inference : { ((activeConversationStateRef.current.inferenceStats?.tokensGenerated ?? 0) / nanosecondsToSeconds((activeConversationStateRef.current.inferenceStats?.inferenceDuration ?? 1))).toFixed(2) } tk/s</div>
+                        <div>Full Process : { (nanosecondsToSeconds(activeConversationStateRef.current.inferenceStats?.wholeProcessDuration ?? 0)).toFixed(2) } s</div>
                     </div>
                     <button title="top of the page" className="goTopButton purpleShadow" onClick={handleScrollToTopClick}>
                         <svg style={{transform:'translateY(1px)'}} height="20" viewBox="0 0 28 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -410,10 +409,19 @@ function Chat() {
             </div>
         </main>
 
-        <RightPanel memoizedSetModalStatus={memoizedSetModalStatus} AIAgentsList={AIAgentsList} isStreaming={isStreaming} activeMenuItemRef={activeMenuItemRef} setActiveMenuItem={setActiveMenuItem}/>
+        <RightPanel 
+            memoizedSetModalStatus={memoizedSetModalStatus} 
+            AIAgentsList={AIAgentsList} 
+            activeMenuItemRef={activeMenuItemRef} 
+            setActiveMenuItem={setActiveMenuItem}
+        />
         
         {modalVisibility && 
-            <Modal modalVisibility={modalVisibility} memoizedSetModalStatus={memoizedSetModalStatus} width= { modalContentId != "formUploadFile" ? "100%" : "560px"}>
+            <Modal 
+                modalVisibility={modalVisibility} 
+                memoizedSetModalStatus={memoizedSetModalStatus} 
+                width= { modalContentId != "formUploadFile" ? "100%" : "560px"}
+            >
                 {{
                     'formEditAgent' : <FormAgentSettings role={"edit"} memoizedSetModalStatus={memoizedSetModalStatus} triggerAIAgentsListRefresh={triggerAIAgentsListRefresh}/>,
                     'formEditCharacter' : <FormCharacterSettings memoizedSetModalStatus={memoizedSetModalStatus}/>,

@@ -34,11 +34,11 @@ class VectorDatabase {
         }
     }
 
-    async addChunk(text, embeddings, metadatas = {}) {
+    async addChunk(text, embedding, metadatas = {}) {
       try {
         // const asciiEmbeddings = embeddings.map(embedding => this.convertCoordinateToASCII(Math.abs(embedding)))
         // const roundedEmbeddings = embeddings.map((embedding, index) => parseFloat(embedding.toFixed(9)))
-        this.#datas.push({ text, embeddings, metadatas })
+        this.#datas.push({ text, embedding, metadatas })
       } catch (error) {
         console.error(error)
         throw error
@@ -52,7 +52,7 @@ class VectorDatabase {
         }
         console.log(JSON.stringify(document.length))
         for(const chunk of document){
-          await this.addChunk(chunk.text, chunk.embeddings, {filename : chunk.metadatas.filename, filesize : chunk.metadatas.filesize})
+          await this.addChunk(chunk.text, chunk.embedding, {filename : chunk.metadatas.filename, filesize : chunk.metadatas.filesize})
         }
       } catch (error) {
         console.error(error)
@@ -89,7 +89,7 @@ class VectorDatabase {
     #similaritySearch(queryEmbeddings, targetFilesNames, database, topK = 5) {
       const results = database.filter(item => targetFilesNames.includes(item.metadatas.filename)).map(item => ({
         ...item,
-        similarity: this.#cosineSimilarity(queryEmbeddings, item.embeddings)
+        similarity: this.#cosineSimilarity(queryEmbeddings, item.embedding)
       }))
       return results.sort((a, b) => b.similarity - a.similarity).slice(0, topK)
     }

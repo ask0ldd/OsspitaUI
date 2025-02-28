@@ -1,7 +1,7 @@
 export default class ScrapedPage{
     #datas : string
     #source : string
-    #mostRecentDate : string
+    readonly #mostRecentDate : string
 
     constructor(datas : string, source : string, mostRecentDate : string){
         this.#datas = datas

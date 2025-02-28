@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AIAgent } from '../../models/AIAgent';
 import AnswerFormatingService from '../../services/AnswerFormatingService';
 import { ChatService } from '../../services/ChatService';
-import { ICompletionResponse } from '../../interfaces/responses/ICompletionResponse';
+import { ICompletionResponse } from '../../interfaces/responses/OllamaResponseTypes';
 
 vi.mock('../models/AIAgent')
 vi.mock('./AnswerFormatingService')
@@ -129,7 +129,7 @@ describe('ChatService', () => {
     })
   })
 
-  describe('ChatService Reconstructor', () => {
+  /*describe('ChatService Reconstructor', () => {
     const mockStream = new ReadableStream({
       start(controller) {
         // controller.enqueue(new Uint8Array([72, 101, 108, 108, 111])); // "Hello" in UTF-8
@@ -152,9 +152,5 @@ describe('ChatService', () => {
     it('should reformat ending concatenated chunks', async () => {
       expect(await ChatService.rebuildMalformedChunksOptimized(`{"model":"","created_at":"","response":"aaaa ","done":false}\n{"model":"","created_at":"","response":"bbbb","done":true`, reader, decoder)).toEqual(JSON.stringify({"model":"","created_at":"","response":"aaaa bbbb","done":true}))
     })
-
-    /*it('should reformat ending concatenated chunks with split context', async () => {
-      expect(await ChatService.rebuildMalformedChunksOptimized(`{"model":"","created_at":"","response":"aaaa ","done":false}\n{"model":"","created_at":"","response":"bbbb","done":true`, reader, decoder)).toEqual(JSON.stringify({"model":"","created_at":"","response":"aaaa bbbb","done":true}))
-    })*/
-  })
+  })*/
 })

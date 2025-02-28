@@ -55,7 +55,7 @@ const initCharacterSettings = async ({ model, temperature, num_ctx, num_predict 
     }
 }
 
-const updateCharacterModel = () => async (req, res) => {
+const updateCharacterModel = () => async (req, res) => { // update model settings
     try {
         const { model } = req.body
 

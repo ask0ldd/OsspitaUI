@@ -6,8 +6,11 @@ import { ChatService } from "../../services/ChatService";
 import DocService from "../../services/API/DocService";
 import usePagination from "../../hooks/usePagination.ts";
 import DefaultSlotButtonsGroup from "./DefaultSlotButtonsGroup.tsx";
+import { useOptionsContext } from "../../hooks/context/useOptionsContext.ts";
 
-export default function DocumentsSlot({isWebSearchActivated, setWebSearchActivated, memoizedSetModalStatus, active, setActiveSlot} : IProps){
+export default function DocumentsSlot({memoizedSetModalStatus, active, setActiveSlot} : IProps){
+
+    const {isWebSearchActivated, setWebSearchActivated} = useOptionsContext()
 
     const units = ["B", "KB", "MB", "GB"]
 
@@ -182,8 +185,8 @@ export default function DocumentsSlot({isWebSearchActivated, setWebSearchActivat
 }
 
 interface IProps{
-    isWebSearchActivated : boolean
-    setWebSearchActivated: (value: boolean) => void
+    /*isWebSearchActivated : boolean
+    setWebSearchActivated: (value: boolean) => void*/
     memoizedSetModalStatus : ({visibility, contentId} : {visibility : boolean, contentId : string}) => void
     active : boolean
     setActiveSlot : React.Dispatch<React.SetStateAction<"documents" | "images">>

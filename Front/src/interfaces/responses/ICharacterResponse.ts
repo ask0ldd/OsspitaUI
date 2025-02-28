@@ -5,7 +5,7 @@ interface ICharacterResponse {
     mbti: string;
     coreIdentity: string;
     appearance: string;
-    socialCircle?: undefined;
+    socialCircle?: string;
 }
 
 export default ICharacterResponse

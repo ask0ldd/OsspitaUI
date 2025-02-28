@@ -1,24 +1,29 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-unused-private-class-members */
 import IAIAgentPartialParams from "../interfaces/params/IAIAgentPartialParams.js"
 import { IAIModelParams } from "../interfaces/params/IAIModelParams.js"
-import { ICompletionResponse } from "../interfaces/responses/ICompletionResponse.js"
+import TAgentReturnValue from "../interfaces/TAgentReturnValue.js"
 import { ProgressTracker } from "./AIAgentChain.js"
 import { AIModel } from "./AIModel.js"
+import Mediator from "./Mediator.js"
 import { Observer } from "./Observer.js"
 
-export class AIAgent extends AIModel implements Observer {
+export class AIAgent extends AIModel implements Observer<string> {
 
-    #id : string
+    // !!! user should be able to add a regex verifying the quality of the output
+
+    readonly #id : string
     #name : string
     #type : 'system' | 'user_created' = "user_created"
     #favorite : boolean = false
     #targetFilesNames : string[] = []
     #webSearchEconomy: boolean = false
-    #observers : (AIAgent | ProgressTracker)[] = []
+    #observers : (AIAgent | Mediator | ProgressTracker)[] = []
+    #onUpdate?: (state: string, systemPrompt? : string) => Promise<TAgentReturnValue | void>
 
     constructor({
-        id,
+        id = "",
         name, 
         modelName = "llama3.1:8b", 
         systemPrompt = "You are an helpful assistant.", 
@@ -55,6 +60,7 @@ export class AIAgent extends AIModel implements Observer {
         use_mlock = false,
         num_thread = 8,
         targetFilesNames = [],
+        onUpdate = undefined,
     } : IAIModelParams & IAIAgentPartialParams)
     {
         super({
@@ -96,6 +102,7 @@ export class AIAgent extends AIModel implements Observer {
         this.#favorite = favorite
         this.#targetFilesNames = targetFilesNames
         this.#webSearchEconomy = webSearchEconomy
+        this.#onUpdate = onUpdate
         return this
     }
 
@@ -174,6 +181,13 @@ export class AIAgent extends AIModel implements Observer {
         )
     }
 
+    onUpdate(callback : (state: string) => Promise<TAgentReturnValue | void >){
+        /*const boundCallback = (state : string) => {
+            return callback.call(this, state)
+        }*/
+        this.#onUpdate = callback //boundCallback
+    }
+
     toObject(){
         return({
             id : this.getId(),
@@ -235,34 +249,63 @@ export class AIAgent extends AIModel implements Observer {
             use_mlock: this.getUseMlock(),
             num_thread: this.getNumThread(),
         })
+       // return Object.create(this)
     }
 
     // Observer methods / observer[0] -> AIAgent, observer[1] -> ProgressTracker
-    async update(data : string) : Promise<ICompletionResponse | undefined> {
+    async update(response: string): Promise<TAgentReturnValue | void> {
+        try {
+            let result: TAgentReturnValue | void
+    
+            // if the onUpdate callback has been defined, use it
+            if (this.#onUpdate) {
+                result = await this.#onUpdate(response)
+            } else {
+                // if not, LLM.ask
+                result = await this.defaultAskLLMCallback(response)
+            }
+    
+            if (result && this.#observers.length > 0) {
+                return await this.notifyObservers(result)
+            }
+    
+            return result
+        } catch (error) {
+            console.error(`Error when trying to update the agent ${this.#name} :`, error)
+        }
+    }
+
+    async defaultAskLLMCallback(query : string) : Promise<TAgentReturnValue | void>{
         try{
-            const response = await this.ask(data)
+            const response = await this.ask(query)
             // if there is no observer listening to this agent (last agent of the chain)
-            if(this.#observers.length < 1) return response
+            // if(this.#observers.length < 1) return response
             // if there is at least an observer
-            return this.notifyObservers(response)
+            // return await this.notifyObservers(response)
+            return response
         }catch(error){
-            console.error(error)
+            console.error('Error while trying to communicate with the model : ', error)
             throw error
         }
     }
 
-    addObserver(observer : AIAgent | ProgressTracker ) {
+    addObserver(observer : AIAgent | Mediator | ProgressTracker ) {
         this.#observers.push(observer);
+    }
+
+    getObservers(){
+        return this.#observers
     }
 
     // notify the next agent in the chain
     // & the chainProgressTracker
-    notifyObservers(response : ICompletionResponse) {
+    async notifyObservers(response : TAgentReturnValue) : Promise<TAgentReturnValue | void> {
         this.#observers.forEach(observer => {
             if(observer instanceof ProgressTracker) observer.update(response)
         })
         for(const observer of this.#observers){
-            if(observer instanceof AIAgent) return observer.update(response.response)
+            if(observer instanceof Mediator) return observer.update((typeof(response) === "object" && 'response' in response) ? {sourceNode : this.#name, data : response.response} : {sourceNode : this.#name, data : response})
+            if(observer instanceof AIAgent) return observer.update((typeof(response) === "object" && 'response' in response) ? response.response : response)
         }
         return undefined
     }
@@ -289,4 +332,129 @@ Verbose (optional)	Setting this to True configures the internal logger to provid
 Allow Delegation (optional)	Agents can delegate tasks or questions to one another, ensuring that each task is handled by the most suitable agent. Default is True.
 Step Callback (optional)	A function that is called after each step of the agent. This can be used to log the agent's actions or to perform other operations. It will overwrite the crew step_callback.
 Cache (optional)	Indicates if the agent should use a cache for tool usage. Default is True.
+*/
+
+/*
+interface ModelParams {
+  id: string;
+  name: string;
+  modelName: string;
+  systemPrompt: string;
+  temperature: number;
+  mirostat: number;
+  mirostat_eta: number;
+  mirostat_tau: number;
+}
+
+interface ContextParams {
+  context: any[];
+  num_ctx: number;
+  repeat_last_n: number;
+  repeat_penalty: number;
+  seed: number;
+  stop: string[];
+}
+
+interface PredictionParams {
+  tfs_z: number;
+  num_predict: number;
+  top_k: number;
+  top_p: number;
+}
+
+interface AgentParams {
+  type: string;
+  favorite: boolean;
+  webSearchEconomy: boolean;
+  min_p: number;
+  num_keep: number;
+  typical_p: number;
+  presence_penalty: number;
+  frequency_penalty: number;
+  penalize_newline: boolean;
+}
+
+interface HardwareParams {
+  numa: boolean;
+  num_batch: number;
+  num_gpu: number;
+  main_gpu: number;
+  low_vram: boolean;
+  vocab_only: boolean;
+  use_mmap: boolean;
+  use_mlock: boolean;
+  num_thread: number;
+}
+
+constructor({
+  modelParams = {
+    id: "",
+    name: "",
+    modelName: "llama3.1:8b",
+    systemPrompt: "You are an helpful assistant.",
+    temperature: 0.8,
+    mirostat: 0,
+    mirostat_eta: 0.1,
+    mirostat_tau: 5.0,
+  },
+  contextParams = {
+    context: [],
+    num_ctx: 2048,
+    repeat_last_n: 64,
+    repeat_penalty: 1.1,
+    seed: 0,
+    stop: ["\n", "user:", "AI assistant:"],
+  },
+  predictionParams = {
+    tfs_z: 1,
+    num_predict: 1024,
+    top_k: 40,
+    top_p: 0.9,
+  },
+  agentParams = {
+    type: "user_created",
+    favorite: false,
+    webSearchEconomy: false,
+    min_p: 0.0,
+    num_keep: 5,
+    typical_p: 0.7,
+    presence_penalty: 1.5,
+    frequency_penalty: 1.0,
+    penalize_newline: true,
+  },
+  hardwareParams = {
+    numa: false,
+    num_batch: 2,
+    num_gpu: 1,
+    main_gpu: 0,
+    low_vram: false,
+    vocab_only: false,
+    use_mmap: true,
+    use_mlock: false,
+    num_thread: 8,
+  },
+  targetFilesNames = [],
+  onUpdate = undefined,
+  searchRequest,
+}: {
+  modelParams: ModelParams;
+  contextParams: ContextParams;
+  predictionParams: PredictionParams;
+  agentParams: AgentParams;
+  hardwareParams: HardwareParams;
+  targetFilesNames: any[];
+  onUpdate: any;
+  searchRequest: string;
+}) {
+  super({
+    ...modelParams,
+    ...contextParams,
+    ...predictionParams,
+    ...agentParams,
+    ...hardwareParams,
+    targetFilesNames,
+    onUpdate,
+  });
+  this.#searchRequest = searchRequest;
+}
 */

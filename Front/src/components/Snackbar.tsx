@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react'
 import '../style/Snackbar.css'
 import { TRightMenuOptions } from '../interfaces/TRightMenuOptions'
+import { createPortal } from 'react-dom'
+
+const SNACKBAR_DURATION = 1500
+
+const snackbarMessages = {
+  agent: 'Default Mode Active',
+  chain: 'Agent Chaining Mode Active',
+  web: 'Web Search Mode Active',
+  rag: 'RAG Mode Active',
+  roleplay: 'Roleplay Mode Active',
+  settings: 'Settings'
+}
 
 export default function Snackbar({mode} : {mode: TRightMenuOptions | "web" | "rag"}){
 
@@ -11,21 +23,14 @@ export default function Snackbar({mode} : {mode: TRightMenuOptions | "web" | "ra
             setIsVisible(true)
             const timeoutId = setTimeout(() => {
                 setIsVisible(false)
-            }, 1500)
+            }, SNACKBAR_DURATION)
             return () => clearTimeout(timeoutId)
         }
     }, [mode])
 
     return(
-        <div className='snackbar' style={{ display: isVisible ? 'flex' : 'none'/*, top : window.scrollY+2+'px' */}}>
-            {{
-                'agent' : <>Default Mode Active</>,
-                'chain' : <>Agent Chaining Mode Active</>,
-                'web' : <>Web Search Mode Active</>,
-                'rag' : <>RAG Mode Active</>,
-                'roleplay' : <>Roleplay Mode Active</>,
-                'settings': <>Settings</>
-            } [mode]}
-        </div>
+        createPortal(<div className='snackbar' style={{ display: isVisible ? 'flex' : 'none'/*, top : window.scrollY+2+'px' */}}>
+            {snackbarMessages[mode] || ''}
+        </div>, document.body)
     )
 }

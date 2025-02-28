@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, useReducer, useState } from "react"
+import { useRef, useReducer } from "react"
 import { IConversation, IConversationElement, IInferenceStats } from "../interfaces/IConversation"
 import ScrapedPage from "../models/ScrapedPage"
 
@@ -11,7 +11,8 @@ export function useActiveConversationReducer({name, history, lastAgentUsed, last
     // will trigger all activeConversationId related effects
     // when replacing a 0 with a 0 won't
     // consequence : refresh the chat history when the conversation is autoswitched after a deletion
-    const [activeConversationId, setActiveConversationId] = useState<{value : number}>({ value: 0 })
+    // const [activeConversationId, setActiveConversationId] = useState<{value : number}>({ value: 0 })
+
 
     // now.toISOString()
     function conversationReducer(state : IConversation, action : TAction){
@@ -119,7 +120,7 @@ export function useActiveConversationReducer({name, history, lastAgentUsed, last
 
     const [activeConversationState, dispatch] = useReducer(conversationReducer, {name : name, history : history, lastAgentUsed : lastAgentUsed, lastModelUsed : lastModelUsed})
 
-    return {activeConversationState, dispatch, activeConversationStateRef, activeConversationId, setActiveConversationId}
+    return {activeConversationState, dispatch, activeConversationStateRef/*, activeConversationId, setActiveConversationId*/}
 }
 
 export type reducerDispatchType = React.Dispatch<{type: string, payload: any}>

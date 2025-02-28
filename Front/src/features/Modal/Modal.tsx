@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { ReactNode, useEffect, useRef } from 'react'
 import './Modal.css'
+import { createPortal } from 'react-dom'
 
 function Modal({children, modalVisibility, memoizedSetModalStatus, /*modalContent,*/ containerCSSClass, width} : IProps){
 
@@ -56,17 +57,19 @@ function Modal({children, modalVisibility, memoizedSetModalStatus, /*modalConten
     }
     
     return (
-        <dialog style={width ? {width : width} : {}} data-testid="modal" ref={dialogRef} 
-            onClick={handleOnClick} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}
-            onCancel={(e) => e.preventDefault()}>
-                <div className='modalHorizPadding'></div>
-                <div className='modalVertPaddingNChildrenContainer'>
-                    <div className='modalVertPadding'></div>
-                    {children}
-                    <div className='modalVertPadding'></div>
-                </div>
-                <div className='modalHorizPadding'></div>
-        </dialog> 
+        createPortal(
+            <dialog style={width ? {width : width} : {}} data-testid="modal" ref={dialogRef} 
+                onClick={handleOnClick} onMouseUp={handleMouseUp} onMouseDown={handleMouseDown}
+                onCancel={(e) => e.preventDefault()}>
+                    <div className='modalHorizPadding'></div>
+                    <div className='modalVertPaddingNChildrenContainer'>
+                        <div className='modalVertPadding'></div>
+                        {children}
+                        <div className='modalVertPadding'></div>
+                    </div>
+                    <div className='modalHorizPadding'></div>
+            </dialog>, document.body
+        )
     )
 }
 

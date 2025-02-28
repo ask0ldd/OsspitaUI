@@ -1,0 +1,108 @@
+article .galleryContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  width: 100%;
+  margin-top: 0.75rem;
+  /*height: calc(100vh - 74px);*/
+
+  & > img,
+  .fillerMiniature {
+    display: flex;
+    flex: 1 1 calc((100% - 0.75rem) / 4);
+    box-sizing: border-box;
+    /*flex: 1 1 100%;*/
+    max-width: calc((100% - 0.75rem) / 4);
+    aspect-ratio: 1 / 1;
+    border: 1px solid var(--input-border-color);
+    object-fit: cover;
+    cursor: pointer;
+  }
+
+  .fillerMiniature {
+    background-color: rgb(222, 227, 239);
+    cursor: auto;
+  }
+}
+
+article {
+  .searchGalleryContainer {
+    display: flex;
+    width: 100%;
+    height: 36px;
+    flex-direction: row;
+    column-gap: 10px;
+    margin-top: 0.75rem;
+
+    .searchContainer {
+      display: flex;
+      height: 100%;
+      border: 1px dashed #a7afdd;
+      align-items: center;
+      justify-content: center;
+      border-radius: 34px;
+      padding: 0 6px;
+      background-color: #dee2f2;
+      column-gap: 0px;
+      flex-shrink: 1;
+      cursor: pointer;
+      width: 100%;
+
+      input {
+        border: none;
+        background: none;
+        outline: none;
+        font-size: 15px;
+        color: var(--purple-button-color);
+        height: 100%;
+        box-shadow: none;
+        width: 100%;
+      }
+
+      svg {
+        flex-shrink: 0;
+        flex-grow: 0;
+        path {
+          fill: #7983b5;
+        }
+        margin-right: 4px;
+      }
+
+      &.active {
+        border: 1px solid var(--purple-button-color);
+        color: var(--purple-button-color);
+        background-color: var(--answer-background-color);
+        flex: 1 1 calc(100% - 58px); /* 58 = col gap + padding + icon width */
+        column-gap: 6px;
+
+        svg {
+          margin-right: 5px;
+
+          path {
+            fill: var(--purple-button-color);
+          }
+        }
+
+        input {
+          width: 100%;
+
+          &::placeholder {
+            color: #6d48c188;
+          }
+        }
+      }
+
+      &:hover:not(.active) {
+        border-color: var(--purple-button-color);
+        color: var(--purple-button-color);
+        background-color: var(--light-purple-background-color);
+
+        svg {
+          path {
+            fill: var(--purple-button-color);
+          }
+        }
+      }
+    }
+  }
+}

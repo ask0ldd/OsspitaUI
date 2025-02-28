@@ -58,6 +58,21 @@
       flex-grow: 1;
       font-weight: 400;
 
+      &.imageGen {
+        border: none;
+        background: var(--purple-button-color);
+        color: #fff;
+        box-shadow: 0px 1px 2px -1px var(--purple-button-4-8-shadow),
+          0px 1px 2px var(--purple-button-1-2-shadow),
+          0px 4px 8px var(--purple-button-4-8-shadow);
+
+        &:hover {
+          background: #52439d;
+          border: 1px solid var(--purple-button-hover-border-color);
+          box-shadow: 0 2px 0 #fff;
+        }
+      }
+
       &:hover {
         border: 1px solid #25252588;
         box-shadow: inset 0 1px 2px 0px #42396b50, 0 1px 0px #ffffffaa;

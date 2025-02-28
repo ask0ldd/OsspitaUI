@@ -2,10 +2,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { WebSearchService } from '../../services/WebSearchService'
 import mockAgentsList from '../../__mocks__/mockAgentsList'
-import { ICompletionResponse } from '../../interfaces/responses/ICompletionResponse'
 import IScrapedPage from '../../interfaces/IScrapedPage'
 import ScrapedPage from '../../models/ScrapedPage'
 import AgentService from '../../services/API/AgentService'
+import { ICompletionResponse } from '../../interfaces/responses/OllamaResponseTypes'
 
 // Mock dependencies
 vi.mock('./API/AgentService')

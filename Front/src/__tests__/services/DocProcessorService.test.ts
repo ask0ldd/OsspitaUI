@@ -41,7 +41,7 @@ describe('DocProcessorService', () => {
         
         expect(result[0]).toEqual({
             text: 'This is a sample text file content that needs processing.',
-            embeddings: [1, 2, 3]
+            embedding: [1, 2, 3]
         });
     });
 

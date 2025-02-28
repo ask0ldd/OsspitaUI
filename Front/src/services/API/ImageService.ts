@@ -1,8 +1,10 @@
+import IGeneratedImage from "../../interfaces/IGeneratedImage"
 import { IImage } from "../../interfaces/IImage"
 
 export default class ImageService{
     async upload(formData : FormData): Promise<IImage | undefined>{
         try{
+            // !!!!!!! check formdata content
             const response = await fetch('backend/upload', {
                 method: 'POST',
                 body: formData
@@ -71,6 +73,25 @@ export default class ImageService{
 
         } catch (error) {
             console.error("Error deleting the target image : ", error)
+            return undefined
+        }
+    }
+
+    async getAllGeneratedImages() : Promise<IGeneratedImage[] | undefined>{
+        try {
+            const response = await fetch("/backend/generated", {
+                method: "GET",
+                headers: { "Content-Type": "application/json", }
+            })
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`)
+            }
+
+            return await response.json()
+            
+        } catch (error) {
+            console.error("Error fetching images list : ", error)
             return undefined
         }
     }

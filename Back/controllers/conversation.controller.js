@@ -101,6 +101,12 @@ const getAllConversations = (db) => async (req, res) => {
             return res.status(500).json({ error: 'conversations collection does not exist in the database.' })
         }
 
+        /*const test = await conversationsCollection.find() 
+
+        console.log("conv start")
+        console.table(test)
+        console.log("conv end")*/
+
         const conversations = await conversationsCollection.find().reverse()
 
         return res.setHeader("Access-Control-Allow-Origin", "*").status(200).json(conversations)

@@ -1,17 +1,19 @@
+import { IEmbeddingResponse } from "../interfaces/responses/IEmbeddingResponse"
 import IRAGChunkResponse from "../interfaces/responses/IRAGChunkResponse"
 import { AIModel } from "../models/AIModel"
 import { ChatService } from "./ChatService"
+import { split } from 'sentence-splitter'
 
 class DocProcessorService{
 
     static embeddingModel = new AIModel({modelName : "nomic-embed-text"})
 
-    static async processTextFile(fileContent : string) : Promise<{text : string, embeddings : number[]}[]>{
+    static async processTextFile(fileContent : string) : Promise<{text : string, embedding : number[]}[]>{
         const chunks = this.splitTextIntoChunks(fileContent, 600 /* words */)
         const chunksEmbeddings = []
         for (const chunk of chunks) {
-            const embeddings = (await this.embeddingModel.askEmbeddingsFor(chunk)).embedding
-            chunksEmbeddings.push({text : chunk, embeddings : embeddings})
+            const embedding = (await this.embeddingModel.askEmbeddingsFor(chunk)).embedding
+            chunksEmbeddings.push({text : chunk, embedding : embedding})
         }
         return chunksEmbeddings
     }
@@ -31,9 +33,89 @@ class DocProcessorService{
         return sequences
     }
 
-    static async getEmbeddingsForChunk(chunk : string) : Promise<{text : string, embeddings : number[]}> {
+    /*static sentencesSplitter(text : string){
+        const segmenter = new (Intl as any).Segmenter('en', { granularity: 'sentence' });
+        const sentences = Array.from(segmenter.segment(text), (s : SegmentResult) => s?.segment ? s.segment.trim() : undefined);
+        console.log(sentences);
+    }*/
+
+    static sentencesSplitter(text : string) : string[]{
+        const sentences = split(text);
+        // Process sentences for LLM input
+        const extractedSentences = sentences.map(node => {
+        if (node.type === 'Sentence') {
+            return node.raw.trim()
+        }
+        return ''
+        }).filter(Boolean)
+
+        console.log(JSON.stringify(extractedSentences))
+        return extractedSentences
+    }
+
+    static getCosineSimilarity(vecA : number[], vecB : number[]) {
+        const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0)
+        const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0))
+        const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0))
+        return dotProduct / (magnitudeA * magnitudeB)
+    }
+
+    static async getEmbeddingsForChunk(chunk : string) : Promise<{text : string} & IEmbeddingResponse> {
         const embeddings = (await this.embeddingModel.askEmbeddingsFor(this.toTelegraphicText(chunk))).embedding
-        return {text  : chunk, embeddings : this.normalizeVector(embeddings)}
+        return {text  : chunk, embedding : this.normalizeVector(embeddings)}
+    }
+
+    static async semanticChunking(text : string, threshold : number){
+        const sentences = this.sentencesSplitter(text)
+        const embedSentences : { text: string, embedding : number[] } [] = []
+        for(const sentence of sentences){
+            const embedSentence = await this.getEmbeddingsForChunk(sentence)
+            embedSentences.push({text : embedSentence.text.replace(/\s+/g, ' '), embedding : embedSentence.embedding})
+        }
+        console.log(embedSentences.length)
+        return await this.sentencesGroupingBySimilarity(embedSentences, threshold)
+    }
+
+    static async sentencesGroupingBySimilarity(embedSentences : {text : string, embedding : number[]}[], threshold : number){
+        const groupedSentences = []
+        let concatSentence = ""
+        if (embedSentences.length > 0){
+            concatSentence = embedSentences[0].text
+            for(let i = 0; i < embedSentences.length - 1; i++){
+                // console.log(DocProcessorService.getCosineSimilarity(embedSentences[i].embedding, embedSentences[i+2].embedding))
+                // is there 3 elements left? how similar are they?
+                if(i < embedSentences.length - 3 && DocProcessorService.getCosineSimilarity(embedSentences[i].embedding, embedSentences[i+2].embedding) > threshold) 
+                {
+                    concatSentence += embedSentences[i+1].text + embedSentences[i+2].text
+                    i++
+                    continue
+                }
+                // is there 2 elements left? how similar are they?
+                if(i < embedSentences.length - 2 && DocProcessorService.getCosineSimilarity(embedSentences[i].embedding, embedSentences[i+1].embedding) > threshold) 
+                {
+                    concatSentence += embedSentences[i+1].text
+                    groupedSentences.push(concatSentence)
+                    concatSentence = embedSentences[i+2].text
+                    i++
+                    continue
+                }
+                
+                groupedSentences.push(concatSentence)
+                concatSentence = embedSentences[i+1].text
+            }
+            groupedSentences.push(concatSentence)
+        } 
+        
+        console.log(JSON.stringify(groupedSentences))
+        console.log(groupedSentences.length)
+        console.log(embedSentences.reduce((acc, sentence) => acc + sentence.text, "").length)
+        console.log(groupedSentences.reduce((acc, sentence) => acc + sentence, "").length)
+        
+        const sentencesWithEmbedding = []
+        for(const sentence of groupedSentences){
+            sentencesWithEmbedding.push({text : sentence, embedding : await DocProcessorService.getEmbeddingsForChunk(sentence)})
+        }
+        return sentencesWithEmbedding
     }
 
     static normalizeVector(vector : number[]) {

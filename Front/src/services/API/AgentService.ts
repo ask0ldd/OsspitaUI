@@ -61,13 +61,18 @@ export default class AgentService{
             
         } catch (error) {
             console.error("Error fetching agents list : ", error)
-            return undefined
+            throw error
         }
     }
 
-    async getAgentsNameList() : Promise<string[]> {
-        const allAgents = await this.getAll()
-        return allAgents?.map(agent => agent.name) || []        
+    async getAgentsNameList() : Promise<string[] | undefined> {
+        try{
+            const allAgents = await this.getAll()
+            return allAgents?.map(agent => agent.name) || []        
+        } catch (error) {
+            console.error("Error fetching agents list : ", error)
+            throw error
+        }
     }
 
     async getAgentByName(name : string): Promise<IAgentResponse | undefined>{

@@ -4,12 +4,14 @@ import { ChatService } from "../../services/ChatService";
 import ImagePreview from "./ImagePreview.tsx";
 import {useImagesStore } from "../../hooks/stores/useImagesStore.ts";
 import { useServices } from "../../hooks/useServices.ts";
+import { useOptionsContext } from "../../hooks/context/useOptionsContext.ts";
 
-function ImagesSlot({active, setActiveSlot, isWebSearchActivated, setWebSearchActivated} : IProps){
+function ImagesSlot({active, setActiveSlot} : IProps){
 
   const {images, setImages, hoveredImage, selectedImagesIds, deselectAllImages, getSelectedImages, /*deleteSelectedImages, */toggleImageWithId, pushImage, setHoveredImage } = useImagesStore()
 
   const {imageService} = useServices()
+  const {isWebSearchActivated, setWebSearchActivated} = useOptionsContext()
 
   const [isVisionModelActive, setIsVisionModelActive] = useState<boolean>(true)
 
@@ -18,15 +20,15 @@ function ImagesSlot({active, setActiveSlot, isWebSearchActivated, setWebSearchAc
   const hasBeenInit = useRef(false)
   useEffect(()=>{
     const fetchImages = async () => {
-      const images = await imageService.getAll()
-      setImages(images ?? [])
+      const imgs = await imageService.getAll()
+      setImages(imgs ?? [])
     }
     if(!hasBeenInit.current) fetchImages()
   }, [])
 
   async function refreshImages(){
-    const images = await imageService.getAll()
-    setImages(images ?? [])
+    const imgs = await imageService.getAll()
+    setImages(imgs ?? [])
   }
 
   async function handleFileSelect(e : React.ChangeEvent<HTMLInputElement>){
@@ -184,6 +186,4 @@ export default ImagesSlot
 interface IProps{
   active : boolean
   setActiveSlot : React.Dispatch<React.SetStateAction<"documents" | "images">>
-  isWebSearchActivated : boolean
-  setWebSearchActivated: (value: boolean) => void
 }

@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/react/dont-cleanup-after-each'
-import Chat from '../../pages/Chat';
 import { OllamaService } from '../../services/OllamaService';
 import { render, screen, waitFor, act, cleanup } from '@testing-library/react';
 import {describe, beforeEach, vi, expect, test, afterEach } from 'vitest';
@@ -18,18 +16,16 @@ import { userEvent } from '@testing-library/user-event';
 import { mockImagesList, mockImagesList2 } from '../../__mocks__/mockImagesList';
 import ImageService from '../../services/API/ImageService';
 import { IImage } from '../../interfaces/IImage';
-import { before } from 'node:test';
-
-const MockedRouter = () => (
-    <MemoryRouter>
-      <Chat />
-    </MemoryRouter>
-);
+import ConversationService from '../../services/API/ConversationService';
+import mockConversationsList from '../../__mocks__/mockConversationsList';
+import { MockedRouter } from '../../__mocks__/mockedRouter';
 
 const mockVoices = [
     { name: 'Voice 1', lang: 'en-US' },
     { name: 'Voice 2', lang: 'es-ES' },
 ];
+
+// const mockConversations : IConversationWithId[] = []
 
 const mockImage : IImage = {
     $loki: 0,
@@ -51,6 +47,9 @@ describe('Given I am on the Chat page', () => {
             getVoices: vi.fn().mockReturnValue(mockVoices),
         });
         vi.spyOn(ImageService.prototype, 'upload').mockResolvedValue(mockImage)
+        // vi.spyOn(ConversationService.prototype, 'getAll').mockResolvedValue(mockConversations)
+        // ConversationService.getAll = vi.fn().mockResolvedValue(mockConversationsList)
+        vi.spyOn(ConversationService, 'getAll').mockResolvedValue([mockConversationsList[0], mockConversationsList[1], mockConversationsList[2]])
         /*vi.spyOn(ImageRepository, 'setSelectedImageId').mockReturnValue()
         vi.spyOn(ImageRepository, 'pushImage').mockReturnValue()
         vi.spyOn(ImageRepository, 'nImages').mockReturnValue(mockImagesList.length)*/

@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { MemoryRouter } from 'react-router-dom';
 import '@testing-library/react/dont-cleanup-after-each'
-import Chat from '../../pages/Chat';
 import { OllamaService } from '../../services/OllamaService';
 import { render, screen, waitFor, act, cleanup } from '@testing-library/react';
 import {describe, beforeEach, vi, expect, test, afterEach } from 'vitest';
@@ -18,12 +16,7 @@ import { ChatService } from '../../services/ChatService';
 import { WebSearchService } from '../../services/WebSearchService';
 import AgentService from '../../services/API/AgentService';
 import ConversationService from '../../services/API/ConversationService';
-
-const MockedRouter = () => (
-    <MemoryRouter>
-      <Chat />
-    </MemoryRouter>
-);
+import { MockedRouter } from '../../__mocks__/mockedRouter';
 
 const mockVoices = [
     { name: 'Voice 1', lang: 'en-US' },

@@ -7,10 +7,14 @@ async function search(query){
 
   await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36')
 
+  let cleanQuery = query
+  if(query.includes("OR")) cleanQuery = query.split("OR")[0]
+  if(cleanQuery.includes("AND")) cleanQuery = query.split("AND")[0]
+
   // Navigate to the Google search page
   // await page.goto(`https://www.google.com/search?q=${encodeURIComponent(query)}&num=10&output=search`) // google
-
- await page.goto(`https://duckduckgo.com/?t=h_&q=${encodeURIComponent(query)}&ia=web`)
+  console.log(`https://duckduckgo.com/?t=h_&q=${encodeURIComponent(cleanQuery)}&ia=web`)
+  await page.goto(`https://duckduckgo.com/?t=h_&q=${encodeURIComponent(cleanQuery)}&ia=web`)
 
   // Wait for the page to load
   // await page.waitForSelector('.g') // google
