@@ -11,7 +11,8 @@ const snackbarMessages = {
   web: 'Web Search Mode Active',
   rag: 'RAG Mode Active',
   roleplay: 'Roleplay Mode Active',
-  settings: 'Settings'
+  settings: 'Settings',
+  vision: 'Vision Mode Active'
 }
 
 export default function Snackbar({mode} : {mode: TRightMenuOptions | "web" | "rag"}){

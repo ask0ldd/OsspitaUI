@@ -8,3 +8,4 @@ images/*.*
 !images/.gitkeep
 deprecated
 test.js
+!images/characters/*.*

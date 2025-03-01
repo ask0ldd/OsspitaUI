@@ -11,7 +11,7 @@ function ImagesSlot({active, setActiveSlot} : IProps){
   const {images, setImages, hoveredImage, selectedImagesIds, deselectAllImages, getSelectedImages, /*deleteSelectedImages, */toggleImageWithId, pushImage, setHoveredImage } = useImagesStore()
 
   const {imageService} = useServices()
-  const {isWebSearchActivated, setWebSearchActivated} = useOptionsContext()
+  const {isWebSearchActivated, setWebSearchActivated, setActiveMode} = useOptionsContext()
 
   const [isVisionModelActive, setIsVisionModelActive] = useState<boolean>(true)
 
@@ -70,6 +70,7 @@ function ImagesSlot({active, setActiveSlot} : IProps){
     setIsVisionModelActive(true)
     setWebSearchActivated(false)
     toggleImageWithId(id)
+    setActiveMode("vision")
   }
 
   function handleUploadButtonClick(e : React.MouseEvent){

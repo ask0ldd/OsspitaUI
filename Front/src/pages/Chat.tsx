@@ -168,7 +168,12 @@ function Chat() {
                 console.log("___LLM Loading___")
                 // format YYYY/MM/DD
                 const currentDate = "Current date : " + new Date().getFullYear() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getDate() + ". "
-                const finalDatas = await ChatService.askTheActiveAgentForAStreamedResponse({question : currentDate + query, chunkProcessorCallback : onStreamedChunkReceived_Callback, context : currentContext, scrapedPages}) // convert to object and add : showErrorModal : (errorMessage: string) => void
+                const finalDatas = await ChatService.askTheActiveAgentForAStreamedResponse({
+                    question : currentDate + query, 
+                    chunkProcessorCallback : onStreamedChunkReceived_Callback, 
+                    context : currentContext, 
+                    scrapedPages
+                }) // convert to object and add : showErrorModal : (errorMessage: string) => void
                 newContext = finalDatas.newContext
                 inferenceStats = finalDatas.inferenceStats
                 // If streaming was aborted, exit early
@@ -195,7 +200,9 @@ function Chat() {
                         const imageAsB64 = await imageService.getImageAsBase64(image.filename)
                         if(imageAsB64 != null) selectedImagesAsBase64.push(imageAsB64.split(',')[1])
                     }
-                    const historyImage = selectedImagesAsBase64.length > 0 ? /*images[0].data*/ selectedImages.map(image => image.filename) : null
+                    const historyImage = selectedImagesAsBase64.length > 0 
+                        ? selectedImages.map(image => image.filename) 
+                        : null
                     if(historyImage != null) dispatch({ type: ActionType.UPDATE_LAST_HISTORY_ELEMENT_IMAGES, payload : historyImage })
                 }
                 console.log(JSON.stringify(currentContext))

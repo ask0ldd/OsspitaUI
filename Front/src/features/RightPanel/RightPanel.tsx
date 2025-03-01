@@ -17,6 +17,7 @@ import RoleplayPanel from './RoleplayPanel.tsx'
 import { TRightMenuOptions } from '../../interfaces/TRightMenuOptions.ts'
 import SettingsPanel from './SettingsPanel.tsx'
 import { useStreamingContext } from '../../hooks/context/useStreamingContext.ts'
+import { useFetchDocsList } from '../../hooks/useFetchDocsList.ts'
 
 const RightPanel = React.memo(({memoizedSetModalStatus, AIAgentsList, activeMenuItemRef, setActiveMenuItem} : IProps) => {
 
@@ -24,6 +25,7 @@ const RightPanel = React.memo(({memoizedSetModalStatus, AIAgentsList, activeMenu
     const modelsList = useFetchModelsList()
 
     const { deselectAllImages } = useImagesStore()
+    const { deselectAllDocs } = useFetchDocsList()
 
     const { webSearchService, agentService } = useServices()
     const { isStreaming } = useStreamingContext()
@@ -147,6 +149,7 @@ const RightPanel = React.memo(({memoizedSetModalStatus, AIAgentsList, activeMenu
     function handleMenuItemClick(item : string){
         if(isStreaming) return
         deselectAllImages()
+        deselectAllDocs()
         setIsFormTouched(false)
         if(item === "agent" || item === "chain" || item === "settings" || item === "roleplay") setActiveMenuItem(item)
     }

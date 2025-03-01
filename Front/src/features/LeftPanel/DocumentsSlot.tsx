@@ -10,7 +10,7 @@ import { useOptionsContext } from "../../hooks/context/useOptionsContext.ts";
 
 export default function DocumentsSlot({memoizedSetModalStatus, active, setActiveSlot} : IProps){
 
-    const {isWebSearchActivated, setWebSearchActivated} = useOptionsContext()
+    const {isWebSearchActivated, setWebSearchActivated, setActiveMode} = useOptionsContext()
 
     const units = ["B", "KB", "MB", "GB"]
 
@@ -62,6 +62,11 @@ export default function DocumentsSlot({memoizedSetModalStatus, active, setActive
             ChatService.removeDocFromRAGTargets(doc.filename) 
         }
         setDocsList(newDocs)
+        if(newDocs.find(doc => doc.selected)) {
+            setActiveMode("rag")
+        } else {
+            setActiveMode("agent")
+        }
         setWebSearchActivated(false)
     }
 
@@ -80,7 +85,10 @@ export default function DocumentsSlot({memoizedSetModalStatus, active, setActive
     }
 
     function handleOpenUploadFileFormClick() : void {
-        memoizedSetModalStatus({visibility : true, contentId : "formUploadFile"})
+        memoizedSetModalStatus({
+            visibility : true, 
+            contentId : "formUploadFile"
+        })
     }
 
     useEffect(() => {
@@ -100,7 +108,7 @@ export default function DocumentsSlot({memoizedSetModalStatus, active, setActive
       </article>        
     )
 
-    // filter the docs by the search term
+    // filter the docs by the search term !!! memo?
     const filteredDocuments = docsListRef.current
         .filter(doc => doc.filename.toLowerCase().includes(searchTerm.toLowerCase()))
         .slice(activePage * itemsPerPage, (activePage + 1) * itemsPerPage)

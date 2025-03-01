@@ -8,28 +8,39 @@ import React, { useState } from 'react'
 import { IConversation } from '../../interfaces/IConversation'
 import { TAction } from '../../hooks/useActiveConversationReducer'
 import ImagesSlot from './ImagesSlot'
+import { useOptionsContext } from '../../hooks/context/useOptionsContext'
 
 // export default function LeftPanel({activeConversation, setActiveConversation, setModalStatus, selectedPromptRef} : IProps){
 const LeftPanel = React.memo(({dispatch, memoizedSetModalStatus, selectedPromptNameRef, forceLeftPanelRefresh} : IProps) => {
 
     // useEffect(() => {console.log("left panel render")})
 
+    const { activeMode } = useOptionsContext()
+
     const [activeSlot, setActiveSlot] = useState<"documents" | "images">("documents")
+
+    function isAgent(activeMode : string){
+        if(activeMode == "agent") return true
+        if(activeMode == "rag") return true
+        if(activeMode == "web") return true
+        if(activeMode == "vision") return true
+        return false
+    }
 
     return(
         <aside className="leftDrawer">
             <figure style={{cursor:'pointer'}} onClick={() => location.reload()}><span>OSSPITA FOR</span> <img src={ollama}/></figure>
             <ConversationsSlot 
                 dispatch={dispatch}/>
-            <DocumentsSlot 
+            {isAgent(activeMode) && <DocumentsSlot 
                 key={'ds' + forceLeftPanelRefresh} 
                 active={activeSlot == "documents"} 
                 setActiveSlot={setActiveSlot} 
-                memoizedSetModalStatus={memoizedSetModalStatus}/>
+                memoizedSetModalStatus={memoizedSetModalStatus}/>}
             {activeSlot == 'images' && <article style={{marginTop:'0.75rem', textAlign:'left', fontSize:'13px', lineHeight:'130%'}}>Due to a bug in Ollama, only one image can be sent to the llama-vision models. Use minicpm-v if you need to target multiple images at once.</article>}
-            <ImagesSlot 
+            {isAgent(activeMode) && <ImagesSlot 
                 active={activeSlot == "images"} 
-                setActiveSlot={setActiveSlot}/>
+                setActiveSlot={setActiveSlot}/>}
             <PromptsSlot 
                 key={'pt' + forceLeftPanelRefresh} 
                 selectedPromptNameRef={selectedPromptNameRef} 
