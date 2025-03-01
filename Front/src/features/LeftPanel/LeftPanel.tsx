@@ -19,7 +19,7 @@ const LeftPanel = React.memo(({dispatch, memoizedSetModalStatus, selectedPromptN
 
     const [activeSlot, setActiveSlot] = useState<"documents" | "images">("documents")
 
-    function isAgent(activeMode : string){
+    function isActiveModeRelatedToAgentMode(activeMode : string){
         if(activeMode == "agent") return true
         if(activeMode == "rag") return true
         if(activeMode == "web") return true
@@ -32,13 +32,13 @@ const LeftPanel = React.memo(({dispatch, memoizedSetModalStatus, selectedPromptN
             <figure style={{cursor:'pointer'}} onClick={() => location.reload()}><span>OSSPITA FOR</span> <img src={ollama}/></figure>
             <ConversationsSlot 
                 dispatch={dispatch}/>
-            {isAgent(activeMode) && <DocumentsSlot 
+            {isActiveModeRelatedToAgentMode(activeMode) && <DocumentsSlot 
                 key={'ds' + forceLeftPanelRefresh} 
                 active={activeSlot == "documents"} 
                 setActiveSlot={setActiveSlot} 
                 memoizedSetModalStatus={memoizedSetModalStatus}/>}
             {activeSlot == 'images' && <article style={{marginTop:'0.75rem', textAlign:'left', fontSize:'13px', lineHeight:'130%'}}>Due to a bug in Ollama, only one image can be sent to the llama-vision models. Use minicpm-v if you need to target multiple images at once.</article>}
-            {isAgent(activeMode) && <ImagesSlot 
+            {isActiveModeRelatedToAgentMode(activeMode) && <ImagesSlot 
                 active={activeSlot == "images"} 
                 setActiveSlot={setActiveSlot}/>}
             <PromptsSlot 
@@ -54,13 +54,9 @@ const LeftPanel = React.memo(({dispatch, memoizedSetModalStatus, selectedPromptN
 export default LeftPanel
 
 interface IProps{
-    /*activeConversationId : number
-    setActiveConversationId : ({value} : {value : number}) => void*/
     dispatch : React.Dispatch<TAction>
     memoizedSetModalStatus : ({visibility, contentId} : {visibility : boolean, contentId : string}) => void
     selectedPromptNameRef : React.MutableRefObject<string>
     activeConversationStateRef: React.MutableRefObject<IConversation>
-    /*isWebSearchActivated : boolean
-    setWebSearchActivated: (value: boolean) => void*/
     forceLeftPanelRefresh : number
 }

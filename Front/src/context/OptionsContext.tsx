@@ -10,8 +10,8 @@ interface IOptionsContextValue {
     isWebSearchActivatedRef : React.MutableRefObject<boolean>
     activeConversationId : { value: number }
     setActiveConversationId : React.Dispatch<React.SetStateAction<{ value: number }>>
-    activeMode : TRightMenuOptions | "web" | "rag"
-    setActiveMode : React.Dispatch<React.SetStateAction<TRightMenuOptions | "web" | "rag">>
+    activeMode : TRightMenuOptions | "web" | "rag" | "vision"
+    setActiveMode : React.Dispatch<React.SetStateAction<TRightMenuOptions | "web" | "rag" | "vision">>
     /*isStreaming : boolean
     setIsStreaming : (value: boolean) => void
     isStreamingRef : React.MutableRefObject<boolean>*/
@@ -34,7 +34,7 @@ export function OptionsProvider({ children } : {children: React.ReactNode}) {
         _setWebSearchActivated(value)
     }, [])
 
-    const [activeMode, setActiveMode] = useState<TRightMenuOptions | "web" | "rag">("agent")
+    const [activeMode, setActiveMode] = useState<TRightMenuOptions | "web" | "rag" | "vision">("agent")
 
     /*const [isStreaming, _setIsStreaming] = useState<boolean>(false)
     const isStreamingRef = useRef(isStreaming)
