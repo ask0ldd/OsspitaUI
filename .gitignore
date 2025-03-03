@@ -25,6 +25,7 @@ back/dist-ssr
 *.njsproj
 *.sln
 *.sw?
+deprecated
 
 front/src/prompts/*
 front/src/style/green
