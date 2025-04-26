@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChatService } from "../services/ChatService";
 import ChatHistory from "../features/ChatHistory/ChatHistory";
 import '../style/Chat.css'
 import FollowUpQuestions from "../components/FollowUpQuestions";
@@ -22,10 +21,8 @@ import DocService from "../services/API/DocService";
 import DocProcessorService from "../services/DocProcessorService";
 import IRAGChunkResponse from "../interfaces/responses/IRAGChunkResponse";
 import AIAgentChain from "../models/AIAgentChain";
-import AnswerFormatingService from "../services/AnswerFormatingService";
-import InferenceStatsFormatingService from "../services/InferenceStatsFormatingService";
 import { FormSelectChainAgent } from "../features/Modal/FormSelectChainAgent";
-import { useServices } from "../hooks/useServices";
+import { useServices } from "../hooks/context/useServices";
 import useRightMenu from "../hooks/useRightMenu";
 import { useImagesStore } from "../hooks/stores/useImagesStore";
 import { useMainTextAreaStore } from "../hooks/stores/useMainTextAreaStore";
@@ -46,7 +43,7 @@ function Chat() {
     useScrollbar()
 
     const { getSelectedImages } = useImagesStore()
-    const { webSearchService, imageService } = useServices();
+    const { webSearchService, imageService, chatService, answerFormatingService, inferenceStatsFormatingService } = useServices();
     const { activeConversationId, activeMode, setActiveMode } = useOptionsContext()
     const { isStreaming, setIsStreaming, isStreamingRef } = useStreamingContext()
 
@@ -90,7 +87,7 @@ function Chat() {
     // Aborts ongoing streaming, resets UI state, and loads the selected conversation
     useEffect(() => {
         // Abort any ongoing streaming when switching conversations
-        if (isStreaming) ChatService.abortAgentLastRequest()
+        if (isStreaming) chatService.abortAgentLastRequest()
         // Reset UI state
         setIsStreaming(false)
         setTextareaValue("")
@@ -145,15 +142,15 @@ function Chat() {
             // Prevent empty query and multiple concurrent streams
             if (query == "" || isStreamingRef.current) return
             // if the active conversation model has been changed since the last request -> reset the context
-            const currentContext = (ChatService.getActiveAgent().getModelName() != activeConversationStateRef.current.lastModelUsed) 
+            const currentContext = (chatService.getActiveAgent().getModelName() != activeConversationStateRef.current.lastModelUsed) 
                 ? [] : activeConversationStateRef.current.history[activeConversationStateRef.current.history.length - 1]?.context
             setIsStreaming(true)
             // Create a new blank conversation Q&A pair in the active conversation state
             dispatch({ 
                 type: ActionType.NEW_BLANK_HISTORY_ELEMENT, 
                 payload: { message : query, 
-                agentUsed : ChatService.getActiveAgent().asString(), 
-                modelUsed : ChatService.getActiveAgent().getModelName(),}
+                agentUsed : chatService.getActiveAgent().asString(), 
+                modelUsed : chatService.getActiveAgent().getModelName(),}
             })
             let newContext = []
             let inferenceStats : IInferenceStats
@@ -162,13 +159,13 @@ function Chat() {
             // Handle web search if activated, otherwise use internal knowledge
             if (isWebSearchActivatedRef.current == true && activeMenuItemRef.current == "agent") {
                 // web search unavailable when a vision model is active
-                if(ChatService.isAVisionModelActive()) throw new Error("Web search not available when a vision model is selected.")
+                if(chatService.isAVisionModelActive()) throw new Error("Web search not available when a vision model is selected.")
                 console.log("___Web Search___")
                 scrapedPages = await webSearchService.scrapeRelatedDatas({query, maxPages : 3}) || (() => { throw new Error("No results found for your query") })()
                 console.log("___LLM Loading___")
                 // format YYYY/MM/DD
                 const currentDate = "Current date : " + new Date().getFullYear() + "/" + (new Date().getMonth() + 1) + "/" + new Date().getDate() + ". "
-                const finalDatas = await ChatService.askTheActiveAgentForAStreamedResponse({
+                const finalDatas = await chatService.askTheActiveAgentForAStreamedResponse({
                     question : currentDate + query, 
                     chunkProcessorCallback : onStreamedChunkReceived_Callback, 
                     context : currentContext, 
@@ -186,10 +183,10 @@ function Chat() {
                 // Use internal knowledge without web search
                 console.log("___LLM Loading___")
 
-                const isVisionModelActive = ChatService.isAVisionModelActive()
+                const isVisionModelActive = chatService.isAVisionModelActive()
                 
                 // If any document is selected, extract the relevant datas for RAG
-                const ragContext = ChatService.getRAGTargetsFilenames().length > 0 && activeMenuItemRef.current == "agent" ? await buildRAGContext(query) : ""
+                const ragContext = chatService.getRAGTargetsFilenames().length > 0 && activeMenuItemRef.current == "agent" ? await buildRAGContext(query) : ""
 
                 const selectedImagesAsBase64 : string[] = []
                 if(isVisionModelActive != false) {
@@ -206,7 +203,7 @@ function Chat() {
                     if(historyImage != null) dispatch({ type: ActionType.UPDATE_LAST_HISTORY_ELEMENT_IMAGES, payload : historyImage })
                 }
                 console.log(JSON.stringify(currentContext))
-                const finalDatas = await ChatService.askTheActiveAgentForAStreamedResponse(
+                const finalDatas = await chatService.askTheActiveAgentForAStreamedResponse(
                 {
                     question : isVisionModelActive ? query : ragContext + query, 
                     chunkProcessorCallback : onStreamedChunkReceived_Callback, 
@@ -243,7 +240,7 @@ function Chat() {
             // if(error instanceof Error && (error.name === "AbortError" || error.name.includes("abort") || error.message.includes("Signal"))) return 
             if(isAbortError(error)) return
 
-            ChatService.abortAgentLastRequest()
+            chatService.abortAgentLastRequest()
             showErrorModal("Stream failed. " + (error instanceof Error ? error.message : error))
         }finally{
             setIsStreaming(false)
@@ -266,10 +263,10 @@ function Chat() {
             })
             const response = await AIAgentChain.process(query) 
             if(response == null) throw new Error("The chain failed to produce a response.")
-            const answerAsHTML = await AnswerFormatingService.format(response.response)
+            const answerAsHTML = await answerFormatingService.format(response.response)
             dispatch({ type: ActionType.UPDATE_LAST_HISTORY_ELEMENT_ANSWER, payload : {html : answerAsHTML, markdown : response.response}})
             if((textareaRef.current as HTMLTextAreaElement).value == activeConversationStateRef.current.history.slice(-1)[0].question) setTextareaValue("")
-            const stats = InferenceStatsFormatingService.extractStats(response)
+            const stats = inferenceStatsFormatingService.extractStats(response)
             dispatch({ 
                 type: ActionType.UPDATE_LAST_HISTORY_ELEMENT_CONTEXT_NSTATS, 
                 payload: {newContext : [], inferenceStats: stats} 
@@ -299,9 +296,9 @@ function Chat() {
 
     // retrieve the ragDatas to pour into the context
     async function buildRAGContext(message : string) : Promise<string> {
-        const RAGChunks = await DocService.getRAGResults(message, ChatService.getRAGTargetsFilenames())
+        const RAGChunks = await DocService.getRAGResults(message, chatService.getRAGTargetsFilenames())
         lastRAGResultsRef.current = RAGChunks
-        return RAGChunks.length == 0 ? "" : DocProcessorService.formatRAGDatas(RAGChunks)
+        return RAGChunks.length == 0 ? "" : DocProcessorService.formatRAGDatas(chatService.getActiveAgent().getContextSize(), RAGChunks)
     }
 
     function scrollToBottom() {
@@ -341,7 +338,7 @@ function Chat() {
     }
 
     function handleAbortStreamingClick() {
-        ChatService.abortAgentLastRequest()
+        chatService.abortAgentLastRequest()
         if(isWebSearchActivatedRef.current) webSearchService.abortLastRequest()
         AIAgentChain.abortProcess()
     }

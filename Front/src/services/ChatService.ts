@@ -10,9 +10,20 @@ import AnswerFormatingService from "./AnswerFormatingService";
 import InferenceStatsFormatingService from "./InferenceStatsFormatingService";
 export class ChatService{
 
-    static #targetedRAGDocs : string[] = []
+    private readonly answerFormatingService : AnswerFormatingService
+    private readonly inferenceStatsFormatingService :InferenceStatsFormatingService
 
-    static activeAgent : AIAgent | AICharacter = new AIAgent({id : 'a0000000001',
+    constructor(
+      answerFormatingService : AnswerFormatingService, 
+      inferenceStatsFormatingService : InferenceStatsFormatingService,
+    ){
+      this.answerFormatingService = answerFormatingService
+      this.inferenceStatsFormatingService = inferenceStatsFormatingService
+    }
+
+    #targetedRAGDocs : string[] = []
+
+    activeAgent : AIAgent | AICharacter = new AIAgent({id : 'a0000000001',
       name: "baseAssistant",
       modelName : "mistral-nemo:latest",
       systemPrompt : "You are an helpful assistant",
@@ -55,11 +66,11 @@ export class ChatService{
       favorite : false
     })*/
 
-    static stillInUseAgent = this.activeAgent
+    stillInUseAgent = this.activeAgent
 
     // static FUPQuestionsGeneration = true
 
-    static async askForFollowUpQuestions(question : string, context:number[] = []) : Promise<string>
+    async askForFollowUpQuestions(question : string, context:number[] = []) : Promise<string>
     {
       try{
         if(this.activeAgent == null) throw new Error(`Agent is not available`)
@@ -79,14 +90,14 @@ export class ChatService{
     // askTheActiveAgent({question : string, context : number[], formating : boolean, answerProcessorCallback, websearch : boolean})
     // then redirect to one of the two ask below queryAgent
   
-    static async askTheActiveAgent(question : string, context:number[] = [], format : boolean = true) : Promise<IConversationElement>
+    async askTheActiveAgent(question : string, context:number[] = [], format : boolean = true) : Promise<IConversationElement>
     {
       if(this.activeAgent == null) throw new Error(`Agent is not available`)
         this.activeAgent.setContext(context)
 
       try{
         const answer = await this.activeAgent.ask(question)
-        const responseAsHTML = await AnswerFormatingService.format(answer.response)
+        const responseAsHTML = await this.answerFormatingService.format(answer.response)
         return {context : [...answer.context as number[]], answer : {asMarkdown : answer.response, asHTML : responseAsHTML}, sources : [], question : question, date : new Date().toISOString(), images : []}
       }catch(error){
         console.error("Failed to query the model : " + error)
@@ -94,7 +105,7 @@ export class ChatService{
       }
     }
 
-    static async askTheActiveAgentForAStreamedResponse({
+    async askTheActiveAgentForAStreamedResponse({
         question, 
         chunkProcessorCallback, 
         context = [], 
@@ -134,15 +145,15 @@ export class ChatService{
 
                 if(json.done) {
                     newContext = json.context || []
-                    inferenceStats = InferenceStatsFormatingService.extractStats(json)
+                    inferenceStats = this.inferenceStatsFormatingService.extractStats(json)
                     content += json.response
-                    chunkProcessorCallback({markdown : content, html : await AnswerFormatingService.format(content)})
+                    chunkProcessorCallback({markdown : content, html : await this.answerFormatingService.format(content)})
                     break
                 }
             
                 if (!json.done) {
                     content += json.response
-                    chunkProcessorCallback({markdown : content, html : await AnswerFormatingService.format(content)})
+                    chunkProcessorCallback({markdown : content, html : await this.answerFormatingService.format(content)})
                 }
             }
             this.abortAgentLastRequest()
@@ -189,54 +200,54 @@ export class ChatService{
       }
     }*/
 
-    static abortAgentLastRequest(){
+    abortAgentLastRequest(){
       if(this.activeAgent != null) this.activeAgent.abortLastRequest()
       if(this.stillInUseAgent != null) this.stillInUseAgent.abortLastRequest() 
     }
 
-    static setActiveAgent(agent : AIAgent | AICharacter){
+    setActiveAgent(agent : AIAgent | AICharacter){
       this.activeAgent = agent
     }
 
-    static setCurrentlyUsedAgent(agent : AIAgent | AICharacter){
+    setCurrentlyUsedAgent(agent : AIAgent | AICharacter){
       if(agent != null) this.stillInUseAgent = agent
     }
 
-    static getActiveAgentName() : string{
+    getActiveAgentName() : string{
       return this.activeAgent?.getName() || ""
     }
 
-    static getActiveAgent() : AIAgent | AICharacter{
+    getActiveAgent() : AIAgent | AICharacter{
       return this.activeAgent
     }
 
-    static setDocAsARAGTarget(docName : string){
+    setDocAsARAGTarget(docName : string){
       if(!this.#targetedRAGDocs.includes(docName)) this.#targetedRAGDocs.push(docName)
     }
 
-    static removeDocFromRAGTargets(docName : string){
+    removeDocFromRAGTargets(docName : string){
       if(this.#targetedRAGDocs.includes(docName)) this.#targetedRAGDocs = this.#targetedRAGDocs.filter(targetName => !(targetName == docName))
     }
 
-    static getRAGTargetsFilenames() : string[]{
+    getRAGTargetsFilenames() : string[]{
       return this.#targetedRAGDocs
     }
 
-    static clearRAGTargets(){
+    clearRAGTargets(){
       console.log("clearrag")
       this.#targetedRAGDocs = []
       console.log(this.#targetedRAGDocs)
     }
 
-    static logScrapedDatas(scrapedPages : IScrapedPage[]){
+    logScrapedDatas(scrapedPages : IScrapedPage[]){
       scrapedPages?.forEach(page => console.log("scrapedPageData :" + page.datas))
     }
 
-    static isAVisionModelActive(){
+    isAVisionModelActive(){
       return visionModelsClues.some(clue => this.activeAgent.getModelName().toLowerCase().includes(clue))
     }
 
-    static isLlamaVisionModelActive(){
+    isLlamaVisionModelActive(){
       return this.activeAgent.getModelName().toLowerCase().includes('llama') && this.activeAgent.getModelName().toLowerCase().includes('vision')
     }
 

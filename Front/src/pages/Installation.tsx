@@ -6,7 +6,7 @@ import '../style/Installation.css'
 import { useNavigate } from 'react-router-dom'
 import { useEffect, useState } from "react";
 import useFetchAgentsList from "../hooks/useFetchAgentsList.ts";
-import { useServices } from "../hooks/useServices.ts";
+import { useServices } from "../hooks/context/useServices.ts";
 
 export default function Installation(){
 

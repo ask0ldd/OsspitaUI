@@ -1,7 +1,6 @@
 import { IEmbeddingResponse } from "../interfaces/responses/IEmbeddingResponse"
 import IRAGChunkResponse from "../interfaces/responses/IRAGChunkResponse"
 import { AIModel } from "../models/AIModel"
-import { ChatService } from "./ChatService"
 import { split } from 'sentence-splitter'
 
 class DocProcessorService{
@@ -146,10 +145,11 @@ class DocProcessorService{
         return words.join(' ')
     }
 
-    static formatRAGDatas(RAGDatas : IRAGChunkResponse []){
+    static formatRAGDatas(contextSize : number, RAGDatas : IRAGChunkResponse []){
         // consider the context length of the agent to determine the quantity of datas to keep
         // 1500 is the estimated maximum size of a chunk
-        const nChunksAllowed = Math.floor(ChatService.getActiveAgent().getContextSize() / 1500)
+        // const nChunksAllowed = Math.floor(ChatService.getActiveAgent().getContextSize() / 1500)
+        const nChunksAllowed = Math.floor(contextSize / 1500)
         console.log("chunks allowed : " + nChunksAllowed)
         const priority = ['-**HIGHEST PRIORITY DATA :**\n', '-**HIGH PRIORITY DATA :**\n', '-**MEDIUM PRIORITY DATA :**\n', '-**LOW PRIORITY DATA :**\n', '-**LOWEST PRIORITY DATA :**\n']
         return RAGDatas == null ? "" : RAGDataIntroductionPrompt + RAGDatas.slice(0, nChunksAllowed).map((RAGDoc, id) => '\n'+ priority[id] + RAGDoc.text + '.\n').join(" ") + "My query :\n"

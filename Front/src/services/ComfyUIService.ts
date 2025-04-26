@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { IComfyWorkflow } from "../interfaces/IComfyWorkflow";
-import { ExecutedMessage, ExecutingMessage, ExecutionErrorMessage, ProgressMessage, TWSMessage, WSMessageType } from "../interfaces/TWSMessageType";
+import { TWSMessage, WSMessageType } from "../interfaces/TWSMessageType";
 
 /* eslint-disable no-unused-private-class-members */
 class ComfyUIService {

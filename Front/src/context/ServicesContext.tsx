@@ -8,6 +8,9 @@ import CharacterService from '../services/API/CharacterService';
 import ComfyUIService from '../services/ComfyUIService';
 import ImageGenWorkflowService from '../services/API/imageGen/imageGenWorkflowService';
 import ImageGenPromptService from '../services/API/imageGen/ImageGenPromptService';
+import { ChatService } from '../services/ChatService';
+import AnswerFormatingService from '../services/AnswerFormatingService';
+import InferenceStatsFormatingService from '../services/InferenceStatsFormatingService';
 
 export interface ServicesContextType {
   agentService: AgentService
@@ -19,6 +22,9 @@ export interface ServicesContextType {
   comfyUIService : ComfyUIService
   workflowService : ImageGenWorkflowService
   imagePromptService : ImageGenPromptService
+  chatService : ChatService
+  answerFormatingService : AnswerFormatingService
+  inferenceStatsFormatingService : InferenceStatsFormatingService
 }
 
 const defaultContextValue: ServicesContextType = {
@@ -31,6 +37,9 @@ const defaultContextValue: ServicesContextType = {
   comfyUIService : new ComfyUIService(),
   workflowService : new ImageGenWorkflowService(),
   imagePromptService : new ImageGenPromptService(),
+  chatService : new ChatService(new AnswerFormatingService(), new InferenceStatsFormatingService()),
+  answerFormatingService : new AnswerFormatingService(),
+  inferenceStatsFormatingService : new InferenceStatsFormatingService()
 };
 
 export const ServicesContext = createContext<ServicesContextType>(defaultContextValue);
