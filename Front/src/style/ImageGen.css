@@ -33,95 +33,28 @@ main {
     height: calc(100vh - 74px);
     max-height: calc(100vh - 74px);
     row-gap: 12px;
-  }
 
-  .workflowJSONnTitleContainer {
-    border: 1px solid #b4bddf;
-    display: flex;
-    width: 50%;
-    max-width: 50%;
-    color: #e0d8ee;
-    border-radius: 6px 0 0 0;
-    font-size: 14px;
-    overflow: hidden;
-    flex-direction: column;
+    #workflowContainer {
+      .node {
+        height: 150px;
+        min-width: 150px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        border-radius: 10px;
+        width: fit-content;
+      }
 
-    .leftTitle {
-      height: 2.5rem;
-      flex-shrink: 0;
-      width: 100%;
-      color: rgba(132, 144, 179, 0.933);
-      font-size: 16px;
-      font-weight: 500;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(
-        to bottom,
-        #ffffff66,
-        var(--base-container-background-color)
-      );
-    }
+      .handle {
+        position: relative;
+        top: 16px;
+      }
 
-    .workflowJSONContainer {
-      display: flex;
-      width: 100%;
-      flex-shrink: 0;
-      background: linear-gradient(to bottom, #6a5081, #5b4d7d);
-      color: #e0d8ee;
-      justify-content: left;
-      align-items: flex-start;
-      text-align: left;
-      padding: 1rem;
-      flex: 1;
-      overflow-y: auto;
-      font-size: 14px;
-      scrollbar-width: thin;
-    }
-  }
-
-  .workflowTablenTitleContainer {
-    border: 1px solid #b4bddf;
-    border-left: none;
-    display: flex;
-    width: 50%;
-    max-width: 50%;
-    color: #e0d8ee;
-    border-radius: 0 6px 0 0;
-    font-size: 14px;
-    overflow: hidden;
-    flex-direction: column;
-
-    .rightTitle {
-      height: 2.5rem;
-      flex-shrink: 0;
-      width: 100%;
-      color: rgba(132, 144, 179, 0.933);
-      font-size: 16px;
-      font-weight: 500;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: linear-gradient(
-        to bottom,
-        #ffffff66,
-        var(--base-container-background-color)
-      );
-    }
-
-    .workflowTableContainer {
-      background: #e2e6f3;
-      border-left: none;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem;
-      scrollbar-width: thin;
-      border-top: 1px solid #b4bddf;
-      height: 100%;
-
-      li {
-        color: #252525;
+      .label {
+        text-align: left;
+        margin-left: 10px;
+        color: white;
+        font-weight: 600;
       }
     }
   }
@@ -191,3 +124,132 @@ main {
     }
   }
 }
+
+.react-flow {
+  /* Custom Variables */
+  --xy-theme-selected: rgb(96 165 250);
+  --xy-theme-hover: #c5c5c5;
+  --xy-theme-edge-hover: black;
+  --xy-theme-color-focus: #e8e8e8;
+
+  /* Built-in Variables see https://reactflow.dev/learn/customization/theming */
+  --xy-node-border-default: 1px solid #ffffff;
+  --xy-node-background-color-default: #fefefe;
+
+  --xy-node-boxshadow-default: 0px 1px 2px 0px hsla(245, 10%, 50%, 15%),
+    0px 4px 8px 0px hsla(245, 20%, 50%, 10%);
+
+  --xy-node-border-radius-default: 4px;
+
+  --xy-handle-background-color-default: #373737;
+  --xy-handle-border-color-default: #373737;
+
+  --xy-edge-label-color-default: #505050;
+}
+
+.react-flow.dark {
+  --xy-node-boxshadow-default: 0px 3.54px 4.55px 0px rgba(255, 255, 255, 0.05),
+    /* light shadow */ 0px 3.54px 4.55px 0px rgba(255, 255, 255, 0.13),
+    /* medium shadow */ 0px 0.51px 1.01px 0px rgba(255, 255, 255, 0.2); /* smallest shadow */
+  --xy-theme-color-focus: #535353;
+}
+
+/* Customizing Default Theming */
+
+.react-flow__node {
+  box-shadow: var(--xy-node-boxshadow-default);
+  border-radius: var(--xy-node-border-radius-default);
+  background-color: var(--xy-node-background-color-default);
+  display: flex;
+  font-size: 12px;
+  flex-direction: column;
+  border: none;
+  color: var(--xy-node-color, var(--xy-node-color-default));
+
+  .nodeTitle {
+    display: flex;
+    height: 28px;
+    font-size: 11px;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid hsl(258, 45%, 45%);
+    margin-bottom: 10px;
+    background-color: hsl(258, 45%, 55%);
+    font-weight: 500;
+    padding: 1px 10px 0px 10px;
+    border-radius: 4px 4px 0 0;
+    color: #fff;
+  }
+
+  input {
+    height: 25px;
+    font-size: 12px;
+    background-color: #dee3ef66;
+    border-color: #dee3ef99;
+    box-shadow: none;
+    margin: 0 10px;
+    padding: 0 5px;
+
+    &:focus {
+      outline-width: 0;
+    }
+  }
+}
+/*
+.react-flow__node.selectable:focus {
+  box-shadow: 0px 0px 0px 4px var(--xy-theme-color-focus);
+  border-color: #d9d9d9;
+}
+
+.react-flow__node.selectable:focus:active {
+  box-shadow: var(--xy-node-boxshadow-default);
+}
+
+.react-flow__node.selectable:hover,
+.react-flow__node.draggable:hover {
+  border-color: var(--xy-theme-hover);
+}
+
+.react-flow__node.selectable.selected {
+  border-color: var(--xy-theme-selected);
+  box-shadow: var(--xy-node-boxshadow-default);
+}
+
+.react-flow__node-group {
+  background-color: rgba(207, 182, 255, 0.4);
+  border-color: #9e86ed;
+}
+
+.react-flow__edge.selectable:hover .react-flow__edge-path,
+.react-flow__edge.selectable.selected .react-flow__edge-path {
+  stroke: var(--xy-theme-edge-hover);
+}
+
+.react-flow__handle {
+  background-color: var(--xy-handle-background-color-default);
+}
+
+.react-flow__handle.connectionindicator:hover {
+  pointer-events: all;
+  border-color: var(--xy-theme-edge-hover);
+  background-color: white;
+}
+
+.react-flow__handle.connectionindicator:focus,
+.react-flow__handle.connectingfrom,
+.react-flow__handle.connectingto {
+  border-color: var(--xy-theme-edge-hover);
+}
+
+.react-flow__node-resizer {
+  border-radius: 0;
+  border: none;
+}
+
+.react-flow__resize-control.handle {
+  background-color: #ffffff;
+  border-color: #9e86ed;
+  border-radius: 0;
+  width: 5px;
+  height: 5px;
+}*/

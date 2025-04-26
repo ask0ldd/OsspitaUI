@@ -1,15 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-irregular-whitespace */
-import { useState, useEffect, useRef } from 'react'
-import { ComfyUIBaseWorkflow } from '../constants/ComfyUIBaseWorkflow'
+import { useState, useEffect, useRef, useCallback } from 'react'
+/*import { ComfyUIBaseWorkflow } from '../constants/ComfyUIBaseWorkflow'
 import { basePreset } from '../features/CustomSelect/presets/basePreset'
-import Select, { IOption } from '../features/CustomSelect/Select'
+import Select, { IOption } from '../features/CustomSelect/Select'*/
 import ImageGenLeftPanel from '../features/LeftPanel/ImageGenLeftPanel'
 import ImageGenRightPanel from '../features/RightPanel/ImageGenRightPanel'
-import { useServices } from '../hooks/useServices'
+import { useServices } from '../hooks/context/useServices'
 import { TWSMessage, ExecutedMessage } from '../interfaces/TWSMessageType'
 import '../style/Chat.css'
+import '@xyflow/react/dist/style.css'
 import '../style/ImageGen.css'
 import ComfyUIWorkflowBuilder from '../utils/ComfyUIWorkflowBuilder'
 import IGeneratedImage from '../interfaces/IGeneratedImage'
@@ -18,6 +19,16 @@ import ErrorAlert from '../features/Modal/ErrorAlert'
 import { FormPromptSettings } from '../features/Modal/FormPromptSettings'
 import Modal from '../features/Modal/Modal'
 import useModalManager from '../hooks/useModalManager'
+import { ReactFlow, Background, BackgroundVariant, Controls, addEdge, Connection, Edge, useEdgesState, useNodesState, Node } from '@xyflow/react'
+import ResultNode from '../models/nodes/flow/ResultNode'
+import TextNode from '../models/nodes/flow/TextNode'
+import UpperCaseNode from '../models/nodes/flow/UpperCaseNode'
+import CheckpointLoaderNode from '../models/nodes/comfyFlow/CheckpointLoaderNode'
+import CLIPTextEncodeNode from '../models/nodes/comfyFlow/CLIPTextEncodeNode'
+import EmptyLatentImageNode from '../models/nodes/comfyFlow/EmptyLatentImageNode'
+import KSamplerNode from '../models/nodes/comfyFlow/KSamplerNode'
+import VAEDecodeNode from '../models/nodes/comfyFlow/VAEDecodeNode'
+import OutputNode from '../models/nodes/comfyFlow/OutputNode'
 
 
 function ImageGen(){
@@ -92,6 +103,17 @@ function ImageGen(){
         })
         console.log(img)*/
     }
+
+    const [nodes, setNodes, onNodesChange] = useNodesState<Node>(initNodes)
+    const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>(initEdges)
+
+    const onConnect = useCallback(
+      (connection : Connection) =>
+          setEdges(eds =>
+          addEdge<Edge>(connection, eds),
+          ),
+      [setEdges],
+    );
     
     return(
         <div id="globalContainer" className="globalContainer">
@@ -107,24 +129,25 @@ function ImageGen(){
                         width: '100%',
                         flex: 1,
                         overflow: 'hidden',
+                        borderRadius : '6px',
+                        border: '1px solid #b4bddfaa',
                     }}>
-                        <div className='workflowJSONnTitleContainer'>
-                            <div className='leftTitle'>Active Workflow</div>
-                            <div className='workflowJSONContainer'>
-                                <pre>{JSON.stringify(ComfyUIBaseWorkflow, null, '  ')}</pre>
-                            </div>
-                        </div>
-                        <div className='workflowTablenTitleContainer'>
-                            <div className='rightTitle'>Customize Workflow (Coming Soon)</div>
-                            <div className='workflowTableContainer'>
-                                <Select 
-                                    options={['Coming Soon', ...extractProperties(ComfyUIBaseWorkflow)].splice(0, 10).map<IOption>(prop => ({label : prop, value : prop}))} 
-                                    id={'workflowSelect'} 
-                                    width={"100%"}
-                                    preset={{...basePreset.get(), selectBackgroundColor : '#fcfcfe'}}
-                                />
-                            </div>
-                        </div>
+                        <ReactFlow 
+                            nodes={nodes} 
+                            edges={edges}
+                            onNodesChange={onNodesChange}
+                            onEdgesChange={onEdgesChange}
+                            onConnect={onConnect}
+                            nodeTypes={nodeTypes}
+                            snapToGrid={true}
+                            defaultViewport={{ x: 0, y: 0, zoom: 1.5 }}
+                            fitView
+                            attributionPosition="bottom-left"
+                            style={{background:"#f1F3fa", outline:'none'}}
+                        >
+                            <Background color="#333" variant={BackgroundVariant.Dots} />
+                            <Controls/>
+                        </ReactFlow>
                     </div>
                     <textarea ref={textareaRef} className='positivePrompt' style={{ flex: '0 0 auto'}} rows={5} onInput={(e) => setTextareaValue((e.target as HTMLTextAreaElement).value)} value={textareaValue}/>
                     <div className='progressSendContainer'>
@@ -180,5 +203,150 @@ function setNestedProperty<T extends Record<string, any>>(obj: T, keys: string[]
 const endsWithNumber = (text : string) => {
     return /\d$/.test(text)
 }
+
+const nodeTypes = {
+  text : TextNode,
+  uppercase : UpperCaseNode,
+  result : ResultNode,
+  checkpointLoader : CheckpointLoaderNode,
+  CLIPTextEncode : CLIPTextEncodeNode,
+  EmptyLatentImage : EmptyLatentImageNode,
+  KSampler : KSamplerNode,
+  VAEDecode : VAEDecodeNode,
+  Output : OutputNode,
+}
+
+export type TextNodeType = Node<{ text: string }, 'text'>;
+export type ResultNodeType = Node<{text: string}, 'result'>;
+export type UpperCaseNodeType = Node<{ text: string }, 'uppercase'>;
+export type CheckpointLoaderNodeType = Node<{ activeCheckpoint: string }, 'checkpointLoader'>;
+export type CLIPTextEncodeNodeType = Node<{prompt: string}, 'CLIPTextEncode'>;
+export type EmptyLatentImageNodeType = Node<{width: number, height: number, batch_size: number}, 'EmptyLatentImage'>;
+export type KSamplerNodeType = Node<{id : string}, 'KSampler'>;
+export type VAEDecodeNodeType = Node<{id : string}, 'VAEDecode'>;
+export type OutputNodeType = Node<{id : string}, 'Output'>;
+export type MyNodeType = 
+  | TextNodeType 
+  | ResultNodeType 
+  | UpperCaseNodeType 
+  | CheckpointLoaderNodeType 
+  | CLIPTextEncodeNodeType 
+  | EmptyLatentImageNodeType 
+  | KSamplerNodeType
+  | VAEDecodeNodeType
+  | OutputNodeType;
+
+const dist = 250
+
+const initNodes: MyNodeType[] = [
+    {
+      id: 'n1',
+      type: 'checkpointLoader',
+      data: { activeCheckpoint : 'FLUX1\\flux1-dev-fp8.safetensors'},
+      position: { x: -2*dist, y: 0 },
+    },
+    {
+      id: 'n2',
+      type: 'CLIPTextEncode',
+      data: { prompt : 'Beautiful scenery'},
+      position : { x : -1*dist, y : 0}
+    },
+    {
+      id: 'n2-2',
+      type: 'CLIPTextEncode',
+      data: { prompt : 'Text, watermark'},
+      position : { x : -1*dist, y : 200}
+    },
+    {
+      id: 'n3',
+      type: 'EmptyLatentImage',
+      data: { width : 512, height : 512, batch_size : 1},
+      position : { x : -1*dist, y : 400}
+    },
+    {
+      id: 'n4',
+      type : 'KSampler',
+      data : { id : ""},
+      position : { x:150, y:0},
+    },
+    {
+      id: 'n5',
+      type : 'VAEDecode',
+      data : { id : ""},
+      position : { x:dist+200, y:0},
+    },
+    {
+      id: 'n6',
+      type : 'Output',
+      data : { id : ""},
+      position : { x:dist+380, y:0},
+    },
+]
+
+const initEdges : Edge[] = [
+    {
+      id:'e1-2',
+      source:'n1',
+      target:'n2',
+      sourceHandle: 'clip',
+      targetHandle: 'clip',
+    },
+    {
+      id:'e1-2-2',
+      source:'n1',
+      target:'n2-2',
+      sourceHandle: 'clip',
+      targetHandle: 'clip',
+    },
+    {
+      id:'e2-4',
+      source:'n2',
+      target:'n4',
+      sourceHandle: 'conditioning',
+      targetHandle: 'positive',
+    },
+    {
+      id:'e2-2-4',
+      source:'n2-2',
+      target:'n4',
+      sourceHandle: 'conditioning',
+      targetHandle: 'negative',
+    },
+    {
+      id:'e3-4',
+      source:'n3',
+      target:'n4',
+      sourceHandle: 'latent',
+      targetHandle: 'latent_image',
+    },
+    {
+      id:'e4-5',
+      source:'n4',
+      target:'n5',
+      sourceHandle: 'latent',
+      targetHandle: 'samples',
+    },
+    {
+      id:'e1-4',
+      source:'n1',
+      target:'n4',
+      sourceHandle: 'model',
+      targetHandle: 'model',
+    },
+    {
+      id:'e1-5',
+      source:'n1',
+      target:'n5',
+      sourceHandle: 'vae',
+      targetHandle: 'vae',
+    },
+    {
+      id:'e5-6',
+      source:'n5',
+      target:'n6',
+      sourceHandle: 'image',
+      targetHandle: 'image',
+    }
+]
 
 export default ImageGen
