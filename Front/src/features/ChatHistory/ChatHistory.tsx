@@ -5,7 +5,7 @@ import '../../style/ChatHistory.css'
 import { useEffect, useRef } from "react"
 import { IConversation } from "../../interfaces/IConversation"
 import React from "react"
-import { useServices } from "../../hooks/useServices.ts"
+import { useServices } from "../../hooks/context/useServices.ts"
 
 const ChatHistory = React.memo(({activeConversationState, setTextareaValue, regenerateLastAnswer, isStreaming} : IProps) => {
 

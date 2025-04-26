@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from "react"
 import { ChatService } from "../../services/ChatService";
 import ImagePreview from "./ImagePreview.tsx";
 import {useImagesStore } from "../../hooks/stores/useImagesStore.ts";
-import { useServices } from "../../hooks/useServices.ts";
+import { useServices } from "../../hooks/context/useServices.ts";
 import { useOptionsContext } from "../../hooks/context/useOptionsContext.ts";
 
 function ImagesSlot({active, setActiveSlot} : IProps){
 
   const {images, setImages, hoveredImage, selectedImagesIds, deselectAllImages, getSelectedImages, /*deleteSelectedImages, */toggleImageWithId, pushImage, setHoveredImage } = useImagesStore()
 
-  const {imageService} = useServices()
+  const {imageService, chatService} = useServices()
   const {isWebSearchActivated, setWebSearchActivated, setActiveMode} = useOptionsContext()
 
   const [isVisionModelActive, setIsVisionModelActive] = useState<boolean>(true)
@@ -63,7 +63,7 @@ function ImagesSlot({active, setActiveSlot} : IProps){
   }
 
   function handleImgClick(id : number){
-    if(ChatService.isAVisionModelActive() == false) {
+    if(chatService.isAVisionModelActive() == false) {
       setIsVisionModelActive(false)
       return deselectAllImages()
     }
@@ -174,7 +174,7 @@ function ImagesSlot({active, setActiveSlot} : IProps){
       reader.onloadend = () => resolve(reader.result as string);
       reader.onerror = reject;
       reader.readAsDataURL(blob);
-    });
+    })
   }
 }
 

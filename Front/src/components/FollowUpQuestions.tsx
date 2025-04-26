@@ -7,6 +7,7 @@ import { IConversationElement } from '../interfaces/IConversation'
 import React from 'react'
 import { useMainTextAreaStore } from '../hooks/stores/useMainTextAreaStore'
 import { useStreamingContext } from '../hooks/context/useStreamingContext'
+import { useServices } from '../hooks/context/useServices'
 
 const FollowUpQuestions = React.memo(({historyElement, selfClose, isFollowUpQuestionsClosed} : IProps) => {
 
@@ -16,6 +17,7 @@ const FollowUpQuestions = React.memo(({historyElement, selfClose, isFollowUpQues
 
     const { textareaRef, setTextareaValue} = useMainTextAreaStore()
     const { isStreaming } = useStreamingContext()
+    const {chatService} = useServices()
 
     function handleFollowUpQuestionClick(text : string){
         textareaRef.current?.focus()
@@ -28,14 +30,14 @@ const FollowUpQuestions = React.memo(({historyElement, selfClose, isFollowUpQues
 
     function handleRefreshFUpClick(){
         if(historyElement == null) return
-        if(ChatService.isAVisionModelActive()) return
-        ChatService.abortAgentLastRequest()
+        if(chatService.isAVisionModelActive()) return
+        chatService.abortAgentLastRequest()
         generateFollowUpQuestions(historyElement.question)
     }
 
     useEffect(() => {
         // if(visionModelsClues.some(clue => ChatService.getActiveAgent().getModelName().toLowerCase().includes(clue))) return
-        if(ChatService.isAVisionModelActive()) return
+        if(chatService.isAVisionModelActive()) return
         if(historyElement?.question && historyElement.question != "" && historyElement?.context?.length && !isStreaming && !isFollowUpQuestionsClosed) {
             generateFollowUpQuestions(historyElement.question)
         }
@@ -61,7 +63,7 @@ ${question}`
     
         try {
             if(historyElement == null) return
-            const threeQuestions = await ChatService.askForFollowUpQuestions(prompt, historyElement.context || []);
+            const threeQuestions = await chatService.askForFollowUpQuestions(prompt, historyElement.context || []);
             response = JSON.parse(threeQuestions);
         } catch (error) {
             console.error(error);

@@ -51,6 +51,8 @@ const LeftPanel = React.memo(({dispatch, memoizedSetModalStatus, selectedPromptN
     return /*prevProps.activeConversationId === nextProps.activeConversationId && */prevProps.activeConversationStateRef.current === nextProps.activeConversationStateRef.current /*&& prevProps.isWebSearchActivated === nextProps.isWebSearchActivated */&& prevProps.forceLeftPanelRefresh === nextProps.forceLeftPanelRefresh;
 })
 
+LeftPanel.displayName = "LeftPanel"
+
 export default LeftPanel
 
 interface IProps{

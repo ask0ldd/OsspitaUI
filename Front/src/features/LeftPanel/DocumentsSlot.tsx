@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IRAGDocument } from "../../interfaces/IRAGDocument";
 import { useFetchDocsList } from "../../hooks/useFetchDocsList.ts";
 import { ChatService } from "../../services/ChatService";
@@ -7,10 +7,12 @@ import DocService from "../../services/API/DocService";
 import usePagination from "../../hooks/usePagination.ts";
 import DefaultSlotButtonsGroup from "./DefaultSlotButtonsGroup.tsx";
 import { useOptionsContext } from "../../hooks/context/useOptionsContext.ts";
+import { useServices } from "../../hooks/context/useServices.ts";
 
 export default function DocumentsSlot({memoizedSetModalStatus, active, setActiveSlot} : IProps){
 
     const {isWebSearchActivated, setWebSearchActivated, setActiveMode} = useOptionsContext()
+    const {chatService} = useServices()
 
     const units = ["B", "KB", "MB", "GB"]
 
@@ -26,10 +28,10 @@ export default function DocumentsSlot({memoizedSetModalStatus, active, setActive
     const filterInputRef = useRef<HTMLInputElement>(null)
     const searchInputRef = useRef<HTMLInputElement>(null)
 
-    function handleToolChange (tool: "search" | "filter") : void {
+    const handleToolChange = useCallback((tool: "search" | "filter") => {
         setActiveTool(tool);
         if (tool === "filter") setSearchTerm("");
-    };
+    }, []);
 
     useEffect(() => {
         if (activeTool === "search" && searchInputRef.current) {
@@ -56,10 +58,10 @@ export default function DocumentsSlot({memoizedSetModalStatus, active, setActive
         const doc = newDocs[targetFileIndex]
         doc.selected = !doc.selected
         if(doc.selected) { 
-            ChatService.setDocAsARAGTarget(doc.filename) 
+            chatService.setDocAsARAGTarget(doc.filename) 
         } 
         else { 
-            ChatService.removeDocFromRAGTargets(doc.filename) 
+            chatService.removeDocFromRAGTargets(doc.filename) 
         }
         setDocsList(newDocs)
         if(newDocs.find(doc => doc.selected)) {
@@ -84,16 +86,16 @@ export default function DocumentsSlot({memoizedSetModalStatus, active, setActive
         setDocsList(docsListRef.current.filter(doc => !docsToDeleteNames.includes(doc.filename)))
     }
 
-    function handleOpenUploadFileFormClick() : void {
+    const handleOpenUploadFileFormClick = useCallback(() => {
         memoizedSetModalStatus({
             visibility : true, 
             contentId : "formUploadFile"
         })
-    }
+    }, [])
 
     useEffect(() => {
         if(active == false) {
-            ChatService.clearRAGTargets()
+            chatService.clearRAGTargets()
             deselectAllDocs()
         }
     }, [active])

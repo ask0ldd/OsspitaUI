@@ -7,13 +7,13 @@ import picots from '../../assets/sliderpicots.png'
 import ICharacterSettings from "../../interfaces/ICharacterSettings.ts";
 import { ChatService } from "../../services/ChatService.ts";
 import useFetchCharacterSettings from "../../hooks/useFetchCharacterSettings.ts";
-import { useServices } from "../../hooks/useServices.ts";
+import { useServices } from "../../hooks/context/useServices.ts";
 
 export default function FormCharacterSettings({memoizedSetModalStatus} : IProps){
 
     const modelsList = useFetchModelsList()
     const settings = useFetchCharacterSettings()
-    const {characterService} = useServices()
+    const {characterService, chatService} = useServices()
 
     const [characterSettings, setCharacterSettings] = useState<ICharacterSettings>(settings)
 
@@ -31,12 +31,12 @@ export default function FormCharacterSettings({memoizedSetModalStatus} : IProps)
     }
 
     function setOptionsToActiveCharacter(){
-        const agent = ChatService.getActiveAgent().clone()
+        const agent = chatService.getActiveAgent().clone()
         agent.setNumCtx(characterSettings.num_ctx)
         agent.setModel(characterSettings.model)
         agent.setTemperature(characterSettings.temperature)
         agent.setNumPredict(characterSettings.num_predict)
-        ChatService.setActiveAgent(agent)
+        chatService.setActiveAgent(agent)
     }
 
     async function handleSaveClick(e: React.MouseEvent<HTMLButtonElement>){

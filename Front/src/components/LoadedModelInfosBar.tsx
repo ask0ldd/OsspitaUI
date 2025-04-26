@@ -4,6 +4,7 @@ import './LoadedModelInfosBar.css'
 import { OllamaService } from '../services/OllamaService'
 import React from 'react'
 import { ChatService } from '../services/ChatService'
+import { useServices } from '../hooks/context/useServices'
 
 // function LoadedModelInfosBar() {
 const LoadedModelInfosBar = React.memo(({ hasStreamingEnded } : IProps) => {
@@ -11,6 +12,7 @@ const LoadedModelInfosBar = React.memo(({ hasStreamingEnded } : IProps) => {
     // useEffect(() => {console.log("infos bar render")})
 
     const [runningModelsInfos, setRunningModelsInfos] = useState<IRunningModelInfos | null>(null)
+    const { chatService } = useServices()
 
     useEffect(() => {
       async function effect(){
@@ -22,7 +24,7 @@ const LoadedModelInfosBar = React.memo(({ hasStreamingEnded } : IProps) => {
 
     async function refreshRunningModelInfos() : Promise<void> {
       const runningModelsInfos = await OllamaService.getRunningModelInfos()
-      const activeModel = runningModelsInfos?.models.find(model => model.name == ChatService.getActiveAgent().getModelName())
+      const activeModel = runningModelsInfos?.models.find(model => model.name == chatService.getActiveAgent().getModelName())
       if(!activeModel) {
         setRunningModelsInfos({
           name : "N/A",
@@ -77,6 +79,8 @@ const LoadedModelInfosBar = React.memo(({ hasStreamingEnded } : IProps) => {
 }*/)
 
 export default LoadedModelInfosBar
+
+LoadedModelInfosBar.displayName = "LoadedModelInfosBar"
 
 // hover % allocation bar
 

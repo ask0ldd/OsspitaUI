@@ -1,4 +1,6 @@
-function DefaultSlotButtonsGroup({handlePageChange, children} : IProps){
+import React from "react"
+
+const DefaultSlotButtonsGroup = React.memo(({handlePageChange, children} : IProps) => {
     return(
         <>
             <button title="previous page" onClick={() => handlePageChange("prev")} className="white" style={{marginLeft:'auto'}}>
@@ -13,7 +15,9 @@ function DefaultSlotButtonsGroup({handlePageChange, children} : IProps){
             </button>*/}
         </>
     )
-}
+}, (prevProps, nextProps) => {
+    return prevProps.handlePageChange === nextProps.handlePageChange
+})
 
 export default DefaultSlotButtonsGroup
 

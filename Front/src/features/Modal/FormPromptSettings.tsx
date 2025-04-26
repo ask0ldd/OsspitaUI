@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import './FormPromptSettings.css'
 import useFetchPrompt from "../../hooks/useFetchPrompt.ts"
-import { useServices } from "../../hooks/useServices.ts"
+import { useServices } from "../../hooks/context/useServices.ts"
 
 export function FormPromptSettings({memoizedSetModalStatus, selectedPromptNameRef, setForceLeftPanelRefresh, role} : TProps){
 

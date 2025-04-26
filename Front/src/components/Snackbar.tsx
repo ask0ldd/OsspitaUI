@@ -15,7 +15,7 @@ const snackbarMessages = {
   vision: 'Vision Mode Active'
 }
 
-export default function Snackbar({mode} : {mode: TRightMenuOptions | "web" | "rag"}){
+export default function Snackbar({mode} : {mode: TRightMenuOptions | "web" | "rag" | "vision"}){
 
     const [isVisible, setIsVisible] = useState(false)
 

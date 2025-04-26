@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import usePagination from "../../hooks/usePagination";
-import { useServices } from "../../hooks/useServices";
+import { useServices } from "../../hooks/context/useServices";
 import IPromptResponse from "../../interfaces/responses/IPromptResponse";
 import DefaultSlotButtonsGroup from "./DefaultSlotButtonsGroup";
 

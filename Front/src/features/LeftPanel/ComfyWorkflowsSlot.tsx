@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import usePagination from "../../hooks/usePagination";
-import { useServices } from "../../hooks/useServices";
+import { useServices } from "../../hooks/context/useServices";
 import DefaultSlotButtonsGroup from "./DefaultSlotButtonsGroup";
 import { IComfyWorklowResponse } from "../../interfaces/responses/IComfyWorklowResponse";
 

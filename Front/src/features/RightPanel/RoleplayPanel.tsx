@@ -10,11 +10,13 @@ import defaultCharacterModelParameters from "../../constants/characters/DefaultC
 import useFetchCharactersList from "../../hooks/useFetchCharactersList"
 import useFetchCharacterSettings from "../../hooks/useFetchCharacterSettings"
 import { TRightMenuOptions } from "../../interfaces/TRightMenuOptions"
+import { useServices } from "../../hooks/context/useServices"
 
 function RoleplayPanel({isStreaming, activeMenuItemRef, memoizedSetModalStatus} : IProps){
 
     const [searchTerm, setSearchTerm] = useState<string>("")
     const [activeItemIndex, setActiveItemIndex] = useState(0)
+    const {chatService} = useServices()
 
     const charactersList = useFetchCharactersList()
     const settings = useFetchCharacterSettings()
@@ -53,7 +55,7 @@ function RoleplayPanel({isStreaming, activeMenuItemRef, memoizedSetModalStatus} 
             formativeExperiences : "",
             systemPrompt : `${baseDirective}\n\n${charactersList[index].coreIdentity}\n\n${charactersList[index].mbti}\n\n${charactersList[index].appearance}`
         })
-        ChatService.setActiveAgent(activeCharacter)
+        chatService.setActiveAgent(activeCharacter)
     }
 
     useEffect(() => {
@@ -64,7 +66,7 @@ function RoleplayPanel({isStreaming, activeMenuItemRef, memoizedSetModalStatus} 
 
     return(
         <article className='roleplayContainer'>
-            <h3 style={{margin:'2px 0 10px 0'}} onClick={() => console.log(ChatService.getActiveAgent().getSystemPrompt())}>SPEAK WITH</h3>
+            <h3 style={{margin:'2px 0 10px 0'}} onClick={() => console.log(chatService.getActiveAgent().getSystemPrompt())}>SPEAK WITH</h3>
             <div className="searchSettingsContainer">
                 <div title="search" className="searchCharContainer active">
                     <input autoFocus type="text" value={searchTerm} placeholder="Search" onChange={handleSearchTermChange}/> {/* ref={searchInputRef} onChange={handleSearchTermChange} */ }

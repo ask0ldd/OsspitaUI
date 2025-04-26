@@ -8,7 +8,7 @@ import IFormStructure from "../../interfaces/IAgentFormStructure";
 // import picots from '../../assets/sliderpicots.png'
 import { ChatService } from "../../services/ChatService";
 import useFetchAgentsList from "../../hooks/useFetchAgentsList.ts";
-import { useServices } from "../../hooks/useServices.ts";
+import { useServices } from "../../hooks/context/useServices.ts";
 import FormSlider from "../../components/FormSlider.tsx";
 import { LLMParameters } from "../../constants/LLMParameters.ts";
 

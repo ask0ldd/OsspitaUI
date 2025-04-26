@@ -1,13 +1,15 @@
-import { ChatService } from '../../services/ChatService'
+import { useServices } from '../../hooks/context/useServices'
 import Select, { IOption } from '../CustomSelect/Select'
 import './DefaultModelModal.css'
 
 export function DefaultModelModal({modelsList} : {modelsList : string[]}){
 
+    const {chatService} = useServices()
+
     function handleSwitchModel(option : IOption){
-        const agent = ChatService.getActiveAgent()
+        const agent = chatService.getActiveAgent()
         agent.setModel(option.value)
-        ChatService.setActiveAgent(agent)
+        chatService.setActiveAgent(agent)
     }
 
     function handleSave(e : React.MouseEvent){

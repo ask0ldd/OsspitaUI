@@ -1,16 +1,12 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useEffect } from "react";
+import { ComponentPropsWithoutRef, useEffect } from "react";
 import '../style/CustomTextarea.css'
-// import useKeyboardListener from "../hooks/CustomTextarea/useKeyboardListener";
 import { useMainTextAreaStore } from "../hooks/stores/useMainTextAreaStore";
 import React from "react";
 
 // const CustomTextarea = forwardRef(({textareaValue, setTextareaValue, currentContext, handlePressEnterKey, activeConversationId, isStreaming} : IProps, ref : ForwardedRef<ImperativeHandle>) => {
-
-const CustomTextarea = React.memo(() => {
-
-    // useEffect(() => console.log("textarea render"))
+function CustomTextarea (props : Omit<ComponentPropsWithoutRef<'textarea'>, OmittedTextAreaProps>) {
     
     const { textareaValue, setTextareaValue, textareaRef } = useMainTextAreaStore()
 
@@ -41,9 +37,11 @@ const CustomTextarea = React.memo(() => {
             <textarea ref={textareaRef} id="mainTextArea" spellCheck="false" onInput={(e) => handleInput((e.target as HTMLTextAreaElement).value)} value={textareaValue}></textarea>
         </div>
     )
-})
+}
 
-export default CustomTextarea
+export default React.memo(CustomTextarea)
+
+type OmittedTextAreaProps = 'id' | 'spellCheck' | 'onInput' | 'value'
 
 /*export interface ImperativeHandle {
     focusTextarea: () => void
