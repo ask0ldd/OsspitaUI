@@ -51,6 +51,9 @@ export class AIModel{
     #use_mmap = true
     #use_mlock = false
     #num_thread = 8
+
+    #thinkingTags : [string, string] | null = null
+    #discardThinking = false
    
     // add keep alive!!!!!
     // add format : json
@@ -384,16 +387,40 @@ export class AIModel{
     }*/
 
     // !!! should instead pass the controller to the conversation?!!! so that model can be easily switched
-    abortLastRequest(){
+    abortLastRequest() : void{
         if(this.#abortController) this.#abortController.abort("Signal aborted.")
         // need to create a new abort controller and a new signal
         // or subsequent request will be aborted from the get go
         this.generateNewAbortControllerAndSignal()
     }
 
-    generateNewAbortControllerAndSignal(){
+    generateNewAbortControllerAndSignal() : void{
         this.#abortController = new AbortController()
         this.#signal = this.#abortController.signal
+    }
+
+    #escapeRegExp(string : string) {
+        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    //#region Discard Thinking
+
+    #discardThinkingSequence(response : string) : string {
+        if(!this.#thinkingTags) return response
+        const pattern = this.#escapeRegExp(this.#thinkingTags[0]) + "[\\s\\S]*?" + this.#escapeRegExp(this.#thinkingTags[1])
+        const regex = new RegExp(pattern, "g")
+        return response.replace(regex, "")
+    }
+   
+    setThinkingTags({startWith, endWith} : {startWith : string, endWith : string}) : this {
+        this.#thinkingTags = [startWith, endWith]
+        return this
+    }
+
+    activateDiscardThinking(targetTag : {startWith : string, endWith : string}) : this {
+        this.#discardThinking = true
+        this.setThinkingTags({startWith : targetTag.startWith, endWith : targetTag.endWith})
+        return this
     }
 
     //#region Getters & Setters
@@ -730,6 +757,14 @@ export class AIModel{
 
     getNumThread(): number {
         return this.#num_thread;
+    }
+
+    getThinkingTags() : [string, string] | null{
+        return this.#thinkingTags
+    }
+
+    get discardThinking() {
+        return this.#discardThinking
     }
 
     //#endregion

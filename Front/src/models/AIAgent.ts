@@ -290,7 +290,8 @@ export class AIAgent extends AIModel implements Observer<string> {
     }
 
     addObserver(observer : AIAgent | Mediator | ProgressTracker ) {
-        this.#observers.push(observer);
+        this.#observers.push(observer)
+        return observer
     }
 
     getObservers(){
