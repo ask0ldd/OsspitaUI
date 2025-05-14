@@ -5,7 +5,6 @@ import useFetchModelsList from "../../hooks/useFetchModelsList.ts";
 import { useEffect, useState } from "react";
 import picots from '../../assets/sliderpicots.png'
 import ICharacterSettings from "../../interfaces/ICharacterSettings.ts";
-import { ChatService } from "../../services/ChatService.ts";
 import useFetchCharacterSettings from "../../hooks/useFetchCharacterSettings.ts";
 import { useServices } from "../../hooks/context/useServices.ts";
 

@@ -2,10 +2,6 @@
 import { useEffect, useRef, useState } from "react"
 import { useServices } from "../../hooks/context/useServices"
 import { IImage } from "../../interfaces/IImage"
-import { text } from "stream/consumers"
-import { AIAgentNew } from "../../models/nodes/AIAgentNew"
-import AINodesChain from "../../models/nodes/AINodesChain"
-import DocProcessorService from "../../services/DocProcessorService"
 
 function SettingsPanel(){
 

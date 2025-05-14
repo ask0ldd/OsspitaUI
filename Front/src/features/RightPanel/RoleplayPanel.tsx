@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import './RightPanel3.css'
 import './RoleplayPanel.css'
-import { ChatService } from "../../services/ChatService"
 import AICharacter from "../../models/AICharacter"
 import baseDirective from "../../constants/characters/baseDirective"
 import defaultCharacterModelParameters from "../../constants/characters/DefaultCharacterModelParameters"

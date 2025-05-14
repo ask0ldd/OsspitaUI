@@ -6,7 +6,6 @@ import './FormAgentSettings.css'
 import useFetchModelsList from "../../hooks/useFetchModelsList.ts";
 import IFormStructure from "../../interfaces/IAgentFormStructure";
 // import picots from '../../assets/sliderpicots.png'
-import { ChatService } from "../../services/ChatService";
 import useFetchAgentsList from "../../hooks/useFetchAgentsList.ts";
 import { useServices } from "../../hooks/context/useServices.ts";
 import FormSlider from "../../components/FormSlider.tsx";
@@ -17,7 +16,7 @@ export default function FormAgentSettings({memoizedSetModalStatus, role, trigger
     const modelList = useFetchModelsList()
     const currentAgent = useRef<AIAgent | null>(null)
 
-    const  { agentService } = useServices()
+    const  { agentService, chatService } = useServices()
 
     const { AIAgentsList } = useFetchAgentsList()
 
@@ -62,7 +61,7 @@ export default function FormAgentSettings({memoizedSetModalStatus, role, trigger
             setFormValues({...baseForm})
         }
 
-        retrieveAgent(ChatService.getActiveAgent().getName())
+        retrieveAgent(chatService.getActiveAgent().getName())
     }, [])
 
     const [activeOptionsSet, setActiveOptionsSet] = useState(0)
@@ -94,9 +93,9 @@ export default function FormAgentSettings({memoizedSetModalStatus, role, trigger
 
     async function handleDeleteClick(e: React.MouseEvent<HTMLButtonElement>){
         e.preventDefault()
-        await agentService.deleteAgent(ChatService.getActiveAgent().getName())
+        await agentService.deleteAgent(chatService.getActiveAgent().getName())
         triggerAIAgentsListRefresh()
-        ChatService.setActiveAgent(AIAgentsList[0])
+        chatService.setActiveAgent(AIAgentsList[0])
         memoizedSetModalStatus({visibility : false})
     }
 
@@ -107,7 +106,7 @@ export default function FormAgentSettings({memoizedSetModalStatus, role, trigger
             id : role == "edit" && currentAgent.current ? currentAgent.current.getId() : "", 
             modelName: formValues.modelName, 
             name : formValues.agentName, 
-            type : role == "edit" ? (ChatService.getActiveAgent() as AIAgent).getType() : "user_created", 
+            type : role == "edit" ? (chatService.getActiveAgent() as AIAgent).getType() : "user_created", 
             favorite : false
         })
         .setContextSize(formValues.maxContextLength)
@@ -134,7 +133,7 @@ export default function FormAgentSettings({memoizedSetModalStatus, role, trigger
         if(response != null) return setError(response)
         
         triggerAIAgentsListRefresh()
-        ChatService.setActiveAgent(newAgent)
+        chatService.setActiveAgent(newAgent)
     
         // if(setForceRightPanelRefresh) setForceRightPanelRefresh(prev => prev + 1)
             
@@ -190,7 +189,7 @@ export default function FormAgentSettings({memoizedSetModalStatus, role, trigger
                     value={formValues.agentName}
                     onChange={(e) => setFormValues(formValues => ({...formValues, agentName : e.target?.value}))}
                 />
-                {(ChatService.getActiveAgent() as AIAgent).getType() != 'system' && 
+                {(chatService.getActiveAgent() as AIAgent).getType() != 'system' && 
                     <button onClick={handleDeleteClick} className="deleteAgentButton purpleShadow">
                         <span style={{transform:'translateY(1px)'}}>Delete </span>
                         <svg width="16" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg">
