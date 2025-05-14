@@ -6,7 +6,8 @@ describe('AnswerFormatingService', () => {
         it('should format a simple Markdown answer correctly', async () => {
             const input = 'This is a **bold** text.'
             const expectedOutput = '<p>This is a <strong>bold</strong> text.</p>\n'
-            const result = await AnswerFormatingService.format(input)
+            const answerFormatingService = new AnswerFormatingService()
+            const result = await answerFormatingService.format(input)
             expect(result).toBe(expectedOutput)
         });
 
@@ -16,14 +17,16 @@ describe('AnswerFormatingService', () => {
                         <div class="title">Code<span style="margin-left:auto; padding-right:0.5rem">Javascript</span></div>
                         <div class="body" onClick="((event) => {if(event.currentTarget) navigator.clipboard.writeText(event.currentTarget.innerText)})(event)"><pre><code class="language-javascript">console.log(&quot;Hello World&quot;);</code></pre></div>
                     </div>`
-            const result = await AnswerFormatingService.format(input)
+            const answerFormatingService = new AnswerFormatingService()
+            const result = await answerFormatingService.format(input)
             expect(result.replace(/\s+/g, '')).toContain(expectedOutput.replace(/\s+/g, ''))
         });
 
         it('should handle markdown blocks correctly', async  () => {
             const input = 'Here is some markdown:\n```markdown\nSome markdown content\n```\nAnd more text.'
             const expectedOutput = `<p>Here is some markdown:</p><p>Some markdown content</p><div class="textBlock"><div class="body"><pre><code>And more text.</code></pre></div></div>`
-            const result = await AnswerFormatingService.format(input)
+            const answerFormatingService = new AnswerFormatingService()
+            const result = await answerFormatingService.format(input)
 
             expect(result.replace(/\s+/g, '')).toContain(expectedOutput.replace(/\s+/g, ''))
         });

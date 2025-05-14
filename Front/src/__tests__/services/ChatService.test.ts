@@ -3,6 +3,7 @@ import { AIAgent } from '../../models/AIAgent';
 import AnswerFormatingService from '../../services/AnswerFormatingService';
 import { ChatService } from '../../services/ChatService';
 import { ICompletionResponse } from '../../interfaces/responses/OllamaResponseTypes';
+import InferenceStatsFormatingService from '../../services/InferenceStatsFormatingService';
 
 vi.mock('../models/AIAgent')
 vi.mock('./AnswerFormatingService')
@@ -56,26 +57,34 @@ describe('ChatService', () => {
 
   describe('askForFollowUpQuestions', () => {
     it('should return a response from the active agent', async () => {
-      vi.spyOn(ChatService.activeAgent, 'ask').mockResolvedValue(mockCompletionResponse)
-
-      const result = await ChatService.askForFollowUpQuestions('Test question')
+      const answerFormatingService = new AnswerFormatingService()
+      const inferenceStatsFormatingService = new InferenceStatsFormatingService()
+      const chatService = new ChatService(answerFormatingService, inferenceStatsFormatingService)
+      vi.spyOn(chatService.activeAgent, 'ask').mockResolvedValue(mockCompletionResponse)
+      const result = await chatService.askForFollowUpQuestions('Test question')
       expect(result).toBe(mockCompletionResponse.response)
     })
 
     it('should throw an error if the agent is not available', async () => {
-      ChatService.activeAgent = null as unknown as AIAgent;
-      await expect(ChatService.askForFollowUpQuestions('Test question')).rejects.toThrow('Agent is not available')
+      const answerFormatingService = new AnswerFormatingService()
+      const inferenceStatsFormatingService = new InferenceStatsFormatingService()
+      const chatService = new ChatService(answerFormatingService, inferenceStatsFormatingService)
+      chatService.activeAgent = null as unknown as AIAgent;
+      await expect(chatService.askForFollowUpQuestions('Test question')).rejects.toThrow('Agent is not available')
     })
   })
 
   describe('askTheActiveAgent', () => {
     it('should return a formatted response', async () => {
-        ChatService.activeAgent = mockActiveAgent
+        const answerFormatingService = new AnswerFormatingService()
+        const inferenceStatsFormatingService = new InferenceStatsFormatingService()
+        const chatService = new ChatService(answerFormatingService, inferenceStatsFormatingService)
+        chatService.activeAgent = mockActiveAgent
 
-        vi.spyOn(ChatService.activeAgent, 'ask').mockResolvedValue(mockCompletionResponse)
-        vi.spyOn(AnswerFormatingService, 'format').mockResolvedValue('<p>' + mockCompletionResponse.response + '</p>')
+        vi.spyOn(chatService.activeAgent, 'ask').mockResolvedValue(mockCompletionResponse)
+        vi.spyOn(answerFormatingService, 'format').mockResolvedValue('<p>' + mockCompletionResponse.response + '</p>')
 
-        const result = await ChatService.askTheActiveAgent('Test question')
+        const result = await chatService.askTheActiveAgent('Test question')
         expect(result).toEqual({
             context: [1, 2, 3],
             answer: { asMarkdown: mockCompletionResponse.response, asHTML: '<p>' + mockCompletionResponse.response + '</p>' },
@@ -109,23 +118,29 @@ describe('ChatService', () => {
 
   describe('RAG targets management', () => {
     it('should add and remove RAG targets', () => {
-      ChatService.setDocAsARAGTarget('doc1')
-      ChatService.setDocAsARAGTarget('doc2')
-      expect(ChatService.getRAGTargetsFilenames()).toEqual(['doc1', 'doc2'])
+      const answerFormatingService = new AnswerFormatingService()
+      const inferenceStatsFormatingService = new InferenceStatsFormatingService()
+      const chatService = new ChatService(answerFormatingService, inferenceStatsFormatingService)
+      chatService.setDocAsARAGTarget('doc1')
+      chatService.setDocAsARAGTarget('doc2')
+      expect(chatService.getRAGTargetsFilenames()).toEqual(['doc1', 'doc2'])
 
-      ChatService.removeDocFromRAGTargets('doc1')
-      expect(ChatService.getRAGTargetsFilenames()).toEqual(['doc2'])
+      chatService.removeDocFromRAGTargets('doc1')
+      expect(chatService.getRAGTargetsFilenames()).toEqual(['doc2'])
 
-      ChatService.clearRAGTargets()
-      expect(ChatService.getRAGTargetsFilenames()).toEqual([])
+      chatService.clearRAGTargets()
+      expect(chatService.getRAGTargetsFilenames()).toEqual([])
     })
   })
 
   describe('Agent management', () => {
     it('should set and get active agent', () => {
-      ChatService.setActiveAgent(mockActiveAgent)
-      expect(ChatService.getActiveAgent()).toBe(mockActiveAgent)
-      expect(ChatService.getActiveAgentName()).toBe(mockActiveAgent.getName())
+      const answerFormatingService = new AnswerFormatingService()
+      const inferenceStatsFormatingService = new InferenceStatsFormatingService()
+      const chatService = new ChatService(answerFormatingService, inferenceStatsFormatingService)
+      chatService.setActiveAgent(mockActiveAgent)
+      expect(chatService.getActiveAgent()).toBe(mockActiveAgent)
+      expect(chatService.getActiveAgentName()).toBe(mockActiveAgent.getName())
     })
   })
 
