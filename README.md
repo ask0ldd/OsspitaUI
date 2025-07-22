@@ -1,3 +1,34 @@
+
+<div align="right">
+  <details>
+    <summary >🌐 Language</summary>
+    <div>
+      <div align="center">
+        <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=ask0ldd&project=OsspitaUI&lang=id">Bahasa Indonesia</a>
+      </div>
+    </div>
+  </details>
+</div>
+
 Release : Alpha 1.0.5
 
 <div style="display:flex; width:100%; column-gap:16px; margin-bottom:12px;">
