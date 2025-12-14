@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@radix-ui/react-slider": "^1.2.2",
-    "@xyflow/react": "^12.5.4",
+    "@xyflow/react": "^12.10.0",
     "highlight.js": "^11.10.0",
     "mammoth": "^1.8.0",
     "marked": "^14.1.1",
