@@ -11,20 +11,30 @@ import ImageGenPromptService from '../services/API/imageGen/ImageGenPromptServic
 import { ChatService } from '../services/ChatService';
 import AnswerFormatingService from '../services/AnswerFormatingService';
 import InferenceStatsFormatingService from '../services/InferenceStatsFormatingService';
+import { IAnswerFormattingService } from '../services/interfaces/IAnswerFormatingService';
+import { IComfyUIService } from '../services/interfaces/IComfyUIService';
+import { IChatService } from '../services/interfaces/IChatService';
+import { IInferenceStatsFormattingService } from '../services/interfaces/IInferenceStatsFormatingService';
+import { IWebSearchService } from '../services/interfaces/IWebSearchService';
+import { ITTSService } from '../services/interfaces/ITTSService';
+import IPromptService from '../services/API/interfaces/IPromptService';
+import IAgentService from '../services/API/interfaces/IAgentService';
+import { IImageService } from '../services/API/interfaces/IImageService';
+import ICharacterService from '../services/API/interfaces/ICharacterService';
 
 export interface ServicesContextType {
-  agentService: AgentService
-  promptService: PromptService
-  webSearchService: WebSearchService
-  ttsService : TTSService
-  imageService : ImageService
-  characterService : CharacterService
-  comfyUIService : ComfyUIService
+  agentService: IAgentService
+  promptService: IPromptService
+  webSearchService: IWebSearchService
+  ttsService : ITTSService
+  imageService : IImageService
+  characterService : ICharacterService
+  comfyUIService : IComfyUIService
   workflowService : ImageGenWorkflowService
   imagePromptService : ImageGenPromptService
-  chatService : ChatService
-  answerFormatingService : AnswerFormatingService
-  inferenceStatsFormatingService : InferenceStatsFormatingService
+  chatService : IChatService
+  answerFormatingService : IAnswerFormattingService
+  inferenceStatsFormatingService : IInferenceStatsFormattingService
 }
 
 const defaultContextValue: ServicesContextType = {
