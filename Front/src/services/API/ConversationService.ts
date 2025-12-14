@@ -2,6 +2,14 @@ import { IConversation, IConversationWithId } from "../../interfaces/IConversati
 
 export default class ConversationService{
  
+    /**
+     * Saves a new conversation to the backend.
+     *
+     * @async
+     * @param {IConversation} conversation - The conversation data to save.
+     * @returns {Promise<IConversationWithId|undefined>} The saved conversation with its ID, or undefined if an error occurs.
+     * @throws {Error} If the backend returns a non-OK response.
+     */
     static async save(conversation : IConversation) : Promise<IConversationWithId | undefined>{
         try{
             const reponse = await fetch('/backend/conversation', {
@@ -16,6 +24,15 @@ export default class ConversationService{
         }
     }
 
+    /**
+     * Updates an existing conversation by its ID.
+     *
+     * @async
+     * @param {number} conversationId - The ID of the conversation to update.
+     * @param {IConversation} conversation - The updated conversation data.
+     * @returns {Promise<void>} Resolves when the update is complete.
+     * @throws {Error} If the backend returns a non-OK response.
+     */
     static async updateById(conversationId : number, conversation : IConversation) : Promise<void>{
         try{
             const reponse = await fetch('/backend/conversation/byId/' + conversationId, {
@@ -30,6 +47,14 @@ export default class ConversationService{
     }
 
     // getById<T extends IConversationWithId>(conversationId: T['$loki']): Promise<T | undefined>
+    /**
+     * Retrieves a conversation by its ID.
+     *
+     * @async
+     * @param {number} conversationId - The ID of the conversation to retrieve.
+     * @returns {Promise<IConversationWithId|undefined>} The found conversation, or undefined if not found or on error.
+     * @throws {Error} If the backend returns a non-OK response.
+     */
     static async getById(conversationId : number) : Promise<IConversationWithId | undefined>{
         try {
             const response = await fetch("/backend/conversation/byId/" + conversationId, {
@@ -49,6 +74,13 @@ export default class ConversationService{
         }
     }
 
+    /**
+     * Retrieves all conversations from the backend.
+     *
+     * @async
+     * @returns {Promise<IConversationWithId[]|undefined>} An array of conversations, or undefined if an error occurs.
+     * @throws {Error} If the backend returns a non-OK response.
+     */
     static async getAll() : Promise<IConversationWithId[] | undefined>{
         try {
             const response = await fetch("/backend/conversations", {
@@ -68,6 +100,14 @@ export default class ConversationService{
         }
     }
 
+    /**
+     * Deletes a conversation by its ID.
+     *
+     * @async
+     * @param {number} conversationId - The ID of the conversation to delete.
+     * @returns {Promise<void>} Resolves when the deletion is complete.
+     * @throws {Error} If the backend returns a non-OK response.
+     */
     static async deleteById(conversationId : number) : Promise<void>{
         try {
             const response = await fetch("/backend/conversation/byId/" + conversationId, {

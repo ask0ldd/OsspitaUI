@@ -1,7 +1,16 @@
 import IPromptResponse from "../../interfaces/responses/IPromptResponse"
+import IPromptService from "./interfaces/IPromptService"
 
-export default class PromptService{
+export default class PromptService implements IPromptService{
 
+    /**
+     * Saves a new prompt to the backend.
+     * @async
+     * @param {string} name - The name of the prompt.
+     * @param {string} prompt - The prompt content.
+     * @returns {Promise<void>} Resolves when the prompt is saved.
+     * @throws {Error} If the save operation fails.
+     */
     async save(name : string, prompt : string) : Promise<void>{
         try{
             const reponse = await fetch('/backend/prompt', {
@@ -15,6 +24,17 @@ export default class PromptService{
         }
     }
 
+    /**
+     * Updates an existing prompt by its previous name.
+     * @async
+     * @param {string} prevName - The previous name of the prompt.
+     * @param {Object} options - The update options.
+     * @param {string} options.newName - The new name for the prompt.
+     * @param {string} options.prompt - The updated prompt content.
+     * @param {number} options.version - The version number.
+     * @returns {Promise<void>} Resolves when the prompt is updated.
+     * @throws {Error} If the update operation fails.
+     */
     async updateByName(prevName : string, {newName, prompt, version} : {newName : string, prompt : string, version : number}) : Promise<void>{
         try{
             const reponse = await fetch('/backend/prompt/byName/' + prevName, {
@@ -28,6 +48,17 @@ export default class PromptService{
         }
     }
 
+    /**
+     * Updates an existing prompt by its ID.
+     * @async
+     * @param {string} id - The ID of the prompt.
+     * @param {Object} options - The update options.
+     * @param {string} options.name - The new name for the prompt.
+     * @param {string} options.prompt - The updated prompt content.
+     * @param {number} options.version - The version number.
+     * @returns {Promise<void>} Resolves when the prompt is updated.
+     * @throws {Error} If the update operation fails.
+     */
     async updateById(id : string, {name, prompt, version} : {name : string, prompt : string, version : number}) : Promise<void>{
         try{
             const reponse = await fetch('/backend/prompt/byId/' + id, {
@@ -41,6 +72,12 @@ export default class PromptService{
         }
     }
 
+    /**
+     * Retrieves a prompt by its name.
+     * @async
+     * @param {string} name - The name of the prompt.
+     * @returns {Promise<IPromptResponse|undefined>} The prompt response, or undefined if not found or on error.
+     */
     async getByName(name : string) : Promise<IPromptResponse | undefined>{
         try {
             const response = await fetch("/backend/prompt/byName/" + name, {
@@ -60,6 +97,11 @@ export default class PromptService{
         }
     }
 
+    /**
+     * Retrieves all prompts.
+     * @async
+     * @returns {Promise<IPromptResponse[]|undefined>} Array of prompt responses, or undefined on error.
+     */
     async getAll() : Promise<IPromptResponse[] | undefined>{
         try {
             const response = await fetch("/backend/prompts", {
@@ -79,6 +121,13 @@ export default class PromptService{
         }
     }
 
+    /**
+     * Deletes a prompt by its ID.
+     * @async
+     * @param {string} promptId - The ID of the prompt to delete.
+     * @returns {Promise<void>} Resolves when the prompt is deleted.
+     * @throws {Error} If the delete operation fails.
+     */
     async deleteById(promptId : string) : Promise<void>{
         try {
             const response = await fetch("/backend/prompt/byId/" + promptId, {
@@ -95,6 +144,13 @@ export default class PromptService{
         }
     }
 
+    /**
+     * Deletes a prompt by its name.
+     * @async
+     * @param {string} promptName - The name of the prompt to delete.
+     * @returns {Promise<void>} Resolves when the prompt is deleted.
+     * @throws {Error} If the delete operation fails.
+     */
     async deleteByName(promptName : string) : Promise<void>{
         try {
             const response = await fetch("/backend/prompt/byName/" + promptName, {
