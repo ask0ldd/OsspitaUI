@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { IComfyWorkflow } from "../interfaces/IComfyWorkflow";
 import { TWSMessage, WSMessageType } from "../interfaces/TWSMessageType";
+import { IComfyUIService } from "./interfaces/IComfyUIService";
 
+/**
+ * Service for interacting with the ComfyUI WebSocket API and HTTP endpoints.
+ * Handles workflow execution, message callbacks, and image fetching.
+ */
 /* eslint-disable no-unused-private-class-members */
-class ComfyUIService {
+class ComfyUIService implements IComfyUIService {
     readonly #name : string
     #serverAddress = "127.0.0.1:8188"
     #ws! : WebSocket
@@ -15,7 +20,11 @@ class ComfyUIService {
         this.#name = this.generateUniqueName()
     }
 
-    initSocket(){
+    /**
+     * Initializes the WebSocket connection and sets up event handlers.
+     * @returns {void}
+     */
+    initSocket(): void{
       this.#ws = new WebSocket('ws://127.0.0.1:8188/ws?clientId=' + this.#name)
 
       this.#ws.onmessage = (event) => {
@@ -32,28 +41,52 @@ class ComfyUIService {
       }
     }
 
-    disconnect(){
+    /**
+     * Disconnects from the WebSocket and resets event callbacks.
+     * @returns {void}
+     */
+    disconnect(): void{
       this.resetOnEventsCallbacks()
       this.#ws.close()
     }
 
-    on(messageType: WSMessageType, callback: (message: TWSMessage) => void) {
+    /**
+     * Registers a callback for a specific WebSocket message type.
+     * @param {WSMessageType} messageType - Type of the message to listen for.
+     * @param {(message: TWSMessage) => void} callback - Callback function.
+     * @returns {void}
+     */
+    on(messageType: WSMessageType, callback: (message: TWSMessage) => void): void {
       if (!this.#messagesCallbacks[messageType]) {
           this.#messagesCallbacks[messageType] = [];
       }
       this.#messagesCallbacks[messageType].push(callback);
     }
 
-    onWorkflowExecuted(callback: (message: TWSMessage) => void){
+    /**
+     * Registers a callback for workflow executed events.
+     * @param {(message: TWSMessage) => void} callback - Callback function.
+     * @returns {void}
+     */
+    onWorkflowExecuted(callback: (message: TWSMessage) => void): void{
       this.#workflowExecutedCallbacks.push(callback)
     }
 
-    resetOnEventsCallbacks(){
+    /**
+     * Clears all registered event callbacks.
+     * @returns {void}
+     */
+    resetOnEventsCallbacks(): void{
       this.#workflowExecutedCallbacks = []
       this.#messagesCallbacks = {}
     }
 
-    handleWSMessage(message: TWSMessage) {
+    /**
+     * Handles incoming WebSocket messages and dispatches to callbacks.
+     * @param {TWSMessage} message - The message object.
+     * @returns {void}
+     */
+    handleWSMessage(message: TWSMessage): void {
 
       // Execute registered callbacks for this message type
       /*const callbacks = this.#messagesCallbacks[message.type]
@@ -108,7 +141,11 @@ class ComfyUIService {
       this.#ws.send(JSON.stringify(message))
     }*/
     
-
+    /**
+     * Fetches a generated image as a Blob.
+     * @param {string} filename - Image filename.
+     * @returns {Promise<Blob|void>} Resolves with image Blob or void on error.
+     */
     async fetchGeneratedImage(filename: string): Promise<Blob | void> {
       try{
         const response = await fetch(`http://${this.#serverAddress}/view?filename=${filename}`)
@@ -122,13 +159,22 @@ class ComfyUIService {
       }
     }
 
+    /**
+     * Generates a unique client name.
+     * @returns {string} Unique name.
+     */
     generateUniqueName(): string {
         const timestamp = Date.now().toString(36);
         const randomPart = Math.random().toString(36).substr(2);
         return `${timestamp}${randomPart}`;
     }
 
-    async queuePrompt(workflow : IComfyWorkflow){
+    /**
+     * Queues a workflow prompt for execution via HTTP.
+     * @param {IComfyWorkflow} workflow - The workflow to execute.
+     * @returns {Promise<void>}
+     */
+    async queuePrompt(workflow : IComfyWorkflow): Promise<void>{
         const body = {client_id : this.#name, prompt : {...workflow}}
 
         const response = await fetch(`http://${this.#serverAddress}/prompt`, {
@@ -141,11 +187,24 @@ class ComfyUIService {
         if(response.ok) console.log(await response.text())
     }
 
+    /**
+     * Fetches workflow execution history.
+     * @param {number} [maxItems] - Optional max number of items to fetch.
+     * @returns {Promise<HistoryObject|void>}
+     */
     async getHistory(maxItems?: number) : Promise<HistoryObject | void>{
         const response = await fetch(`http://${this.#serverAddress}/history` + (maxItems ? '?maxItems=' + maxItems : ''))
         if(response.ok) return await response.json()
     }
 
+    /**
+     * Fetches an image and returns it as a base64 string.
+     * @param {Object} params
+     * @param {string} params.filename - Image filename.
+     * @param {string} [params.subfolder] - Optional subfolder.
+     * @param {string} [params.type] - Optional type (default: "output").
+     * @returns {Promise<string|void>} Resolves with base64 string or void on error.
+     */
     async getImageAsBase64String({ filename, subfolder = "", type = "output" } : { filename: string, subfolder?: string, type?: string }) : Promise<string | void>{
         try{
             const response = await fetch(`http://${this.#serverAddress}/view?` + encodeURI(new URLSearchParams({ filename, subfolder, type }).toString()))
@@ -168,16 +227,30 @@ class ComfyUIService {
         }
     }
 
-    async getPrompt(promptId : string) {
+    /**
+     * Fetches a prompt by its ID.
+     * @param {string} promptId - Prompt ID.
+     * @returns {Promise<void>}
+     */
+    async getPrompt(promptId : string) : Promise<void> {
         const response = await fetch(`http://${this.#serverAddress}/history?` + promptId)
         console.log(await response.json())
     }
 
-    getLastPrompt(){
+    /**
+     * Gets the last prompt sent.
+     * @returns {string}
+     */
+    getLastPrompt() : string{
       return this.#lastPrompt
     }
 
-    setLastPrompt(prompt : string){
+    /**
+     * Sets the last prompt sent.
+     * @param {string} prompt - The prompt string.
+     * @returns {void}
+     */
+    setLastPrompt(prompt : string): void{
       this.#lastPrompt = prompt
     }
 }
@@ -257,6 +330,6 @@ interface PromptInput {
     meta: Meta;
   }
   
-  interface HistoryObject {
+  export interface HistoryObject {
     [key: string]: PromptEntry;
   }

@@ -8,10 +8,16 @@ import AICharacter from "../models/AICharacter";
 import ScrapedPage from "../models/ScrapedPage";
 import AnswerFormatingService from "./AnswerFormatingService";
 import InferenceStatsFormatingService from "./InferenceStatsFormatingService";
-export class ChatService{
+import { IChatService } from "./interfaces/IChatService";
 
-    private readonly answerFormatingService : AnswerFormatingService
-    private readonly inferenceStatsFormatingService :InferenceStatsFormatingService
+/**
+ * Service for managing chat interactions with AI agents and characters.
+ * Handles question answering, follow-up generation, streaming responses, and RAG document targeting.
+ */
+export class ChatService implements IChatService{
+
+    readonly answerFormatingService : AnswerFormatingService
+    readonly inferenceStatsFormatingService :InferenceStatsFormatingService
 
     constructor(
       answerFormatingService : AnswerFormatingService, 
@@ -70,6 +76,13 @@ export class ChatService{
 
     // static FUPQuestionsGeneration = true
 
+    /**
+     * Asks the active agent for follow-up questions.
+     * @param {string} question - The question to ask.
+     * @param {number[]} [context=[]] - Optional context tokens.
+     * @returns {Promise<string>} The follow-up questions as a string.
+     * @throws {Error} If the agent is not available or the query fails.
+     */
     async askForFollowUpQuestions(question : string, context:number[] = []) : Promise<string>
     {
       try{
@@ -90,6 +103,14 @@ export class ChatService{
     // askTheActiveAgent({question : string, context : number[], formating : boolean, answerProcessorCallback, websearch : boolean})
     // then redirect to one of the two ask below queryAgent
   
+    /**
+   * Asks the active agent a question and returns a formatted response.
+   * @param {string} question - The user's question.
+   * @param {number[]} [context=[]] - Optional context tokens.
+   * @param {boolean} [format=true] - Whether to format the answer.
+   * @returns {Promise<IConversationElement>} The conversation element containing the answer.
+   * @throws {Error} If the agent is not available or the query fails.
+   */
     async askTheActiveAgent(question : string, context:number[] = [], format : boolean = true) : Promise<IConversationElement>
     {
       if(this.activeAgent == null) throw new Error(`Agent is not available`)
@@ -105,6 +126,12 @@ export class ChatService{
       }
     }
 
+    /**
+     * Asks the active agent for a streamed response.
+     * @param {IAskedStreamedResponseParameters} params - Parameters for the streamed response.
+     * @returns {Promise<{newContext: number[], inferenceStats: IInferenceStats}>} The new context and inference stats.
+     * @throws {Error} If the agent is not available or the stream fails.
+     */
     async askTheActiveAgentForAStreamedResponse({
         question, 
         chunkProcessorCallback, 
@@ -200,54 +227,107 @@ export class ChatService{
       }
     }*/
 
-    abortAgentLastRequest(){
+    /**
+     * Aborts the last request made by the agent.
+     * @returns {void}
+     */
+    abortAgentLastRequest() : void{
       if(this.activeAgent != null) this.activeAgent.abortLastRequest()
       if(this.stillInUseAgent != null) this.stillInUseAgent.abortLastRequest() 
     }
 
-    setActiveAgent(agent : AIAgent | AICharacter){
+    /**
+     * Sets the active agent.
+     * @param {AIAgent | AICharacter} agent - The agent to set as active.
+     * @returns {void}
+     */
+    setActiveAgent(agent : AIAgent | AICharacter):void{
       this.activeAgent = agent
     }
 
-    setCurrentlyUsedAgent(agent : AIAgent | AICharacter){
+    /**
+     * Sets the currently used agent (for tracking).
+     * @param {AIAgent | AICharacter} agent - The agent to mark as currently used.
+     * @returns {void}
+     */
+    setCurrentlyUsedAgent(agent : AIAgent | AICharacter): void{
       if(agent != null) this.stillInUseAgent = agent
     }
 
+    /**
+     * Gets the name of the active agent.
+     * @returns {string} The active agent's name.
+     */
     getActiveAgentName() : string{
       return this.activeAgent?.getName() || ""
     }
 
+    /**
+     * Gets the active agent instance.
+     * @returns {AIAgent | AICharacter} The active agent.
+     */
     getActiveAgent() : AIAgent | AICharacter{
       return this.activeAgent
     }
 
-    setDocAsARAGTarget(docName : string){
+    /**
+     * Adds a document as a RAG (Retrieval-Augmented Generation) target.
+     * @param {string} docName - The document name to add.
+     * @returns {void}
+     */
+    setDocAsARAGTarget(docName : string): void{
       if(!this.#targetedRAGDocs.includes(docName)) this.#targetedRAGDocs.push(docName)
     }
 
-    removeDocFromRAGTargets(docName : string){
+    /**
+     * Removes a document from RAG targets.
+     * @param {string} docName - The document name to remove.
+     * @returns {void}
+     */
+    removeDocFromRAGTargets(docName : string): void{
       if(this.#targetedRAGDocs.includes(docName)) this.#targetedRAGDocs = this.#targetedRAGDocs.filter(targetName => !(targetName == docName))
     }
 
+    /**
+     * Gets filenames of all RAG target documents.
+     * @returns {string[]} The list of RAG target document filenames.
+     */
     getRAGTargetsFilenames() : string[]{
       return this.#targetedRAGDocs
     }
 
-    clearRAGTargets(){
+    /**
+     * Clears all RAG target documents.
+     * @returns {void}
+     */
+    clearRAGTargets(): void{
       console.log("clearrag")
       this.#targetedRAGDocs = []
       console.log(this.#targetedRAGDocs)
     }
 
-    logScrapedDatas(scrapedPages : IScrapedPage[]){
+    /**
+     * Logs the data from scraped pages.
+     * @param {IScrapedPage[]} scrapedPages - The scraped pages to log.
+     * @returns {void}
+     */
+    logScrapedDatas(scrapedPages : IScrapedPage[]): void{
       scrapedPages?.forEach(page => console.log("scrapedPageData :" + page.datas))
     }
 
-    isAVisionModelActive(){
+    /**
+     * Checks if the active agent is a vision model.
+     * @returns {boolean} True if a vision model is active; otherwise, false.
+     */
+    isAVisionModelActive(): boolean{
       return visionModelsClues.some(clue => this.activeAgent.getModelName().toLowerCase().includes(clue))
     }
 
-    isLlamaVisionModelActive(){
+    /**
+     * Checks if the active agent is a Llama vision model.
+     * @returns {boolean} True if a Llama vision model is active; otherwise, false.
+     */
+    isLlamaVisionModelActive(): boolean{
       return this.activeAgent.getModelName().toLowerCase().includes('llama') && this.activeAgent.getModelName().toLowerCase().includes('vision')
     }
 

@@ -1,4 +1,6 @@
-export class TTSService{
+import { ITTSService } from "./interfaces/ITTSService";
+
+export class TTSService implements ITTSService{
 
     synth = window.speechSynthesis
     voices : SpeechSynthesisVoice[] = []

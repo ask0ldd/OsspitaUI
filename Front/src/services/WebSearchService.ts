@@ -4,8 +4,13 @@ import IScrapedPage from "../interfaces/IScrapedPage";
 import { AIAgent } from "../models/AIAgent";
 import ScrapedPage from "../models/ScrapedPage";
 import AgentService from "./API/AgentService";
+import { IWebSearchService } from "./interfaces/IWebSearchService";
 
-export class WebSearchService{
+/**
+ * Service for performing web search operations, including scraping and summarizing related data.
+ * Utilizes AI agents for query optimization and content summarization.
+ */
+export class WebSearchService implements IWebSearchService{
 
     #abortController : AbortController = new AbortController()
     #signal = this.#abortController.signal
@@ -14,6 +19,14 @@ export class WebSearchService{
 
     #isWebSearchSummarizationActivated = false
 
+    /**
+     * Scrapes web pages related to the given query and optionally summarizes the results.
+     * @param {Object} params - Parameters for scraping.
+     * @param {string} params.query - The search query.
+     * @param {number} [params.maxPages=3] - Maximum number of pages to scrape.
+     * @param {boolean} [params.summarize] - Whether to summarize the scraped data.
+     * @returns {Promise<ScrapedPage[]|undefined>} Array of scraped pages or undefined if an error occurs.
+     */
     async scrapeRelatedDatas({query , maxPages = 3} : {query : string, maxPages? : number, summarize? : boolean}) : Promise<ScrapedPage[] | undefined>{
         try{
             const optimizedQuery = await this.#optimizeQuery(query)
@@ -28,6 +41,13 @@ export class WebSearchService{
         }
     }
 
+    /**
+     * Calls the external scraper API to fetch web pages.
+     * @param {string} query - The search query.
+     * @param {number} [maxPages=3] - Maximum number of pages to scrape.
+     * @returns {Promise<ScrapedPage[]>} Array of scraped pages.
+     * @private
+     */
     // !!! should be able to abort
     async #callExternalScraper(query : string, maxPages : number = 3) : Promise<ScrapedPage[]>{ // !!! make use of maxPages
         try {
@@ -62,7 +82,12 @@ export class WebSearchService{
         }
     }
 
-    // convert the user request into an optimized search query
+    /**
+     * Optimizes the user query using an AI agent.
+     * @param {string} query - The original search query.
+     * @returns {Promise<string>} The optimized query string.
+     * @private
+     */
     async #optimizeQuery(query : string) : Promise<string> {
         try{
             console.log("**Optimizing your query**")
@@ -76,7 +101,13 @@ export class WebSearchService{
         }
     }
 
-    // summarizing the scraped datas so it will take less context
+    /**
+     * Summarizes the content of scraped pages using an AI agent so it will take less context.
+     * @param {ScrapedPage[]} scrapedPages - Array of scraped pages to summarize.
+     * @param {string} query - The original search query for context.
+     * @returns {Promise<ScrapedPage[]>} Array of summarized scraped pages.
+     * @private
+     */
     async #summarizeScrapedPages(scrapedPages : ScrapedPage[], query : string) : Promise<ScrapedPage[]> {
         try{
             console.log("**Summarizing**")
@@ -103,10 +134,21 @@ export class WebSearchService{
         }
     }
 
+    /**
+     * Removes leading and trailing quotes from a string.
+     * @param {string} str - The input string.
+     * @returns {string} The trimmed string.
+     * @private
+     */
     #trimQuotes(str : string) : string {
         return str.replace(/^['"]|['"]$/g, '').replace('"', " ").replace("'", " ")
     }
 
+    /**
+     * Aborts the last ongoing request and resets the abort controller.
+     * Also aborts any ongoing requests in AI agents.
+     * @returns {void}
+     */
     abortLastRequest() : void{
         if(this.#abortController) this.#abortController.abort("Signal aborted.")
         if(this.#scrapedDatasSummarizer) this.#scrapedDatasSummarizer.abortLastRequest()
@@ -116,15 +158,28 @@ export class WebSearchService{
         this.generateNewAbortControllerAndSignal()
     }
 
+    /**
+     * Generates a new abort controller and signal for subsequent requests.
+     * @returns {void}
+     */
     generateNewAbortControllerAndSignal() : void{
         this.#abortController = new AbortController()
         this.#signal = this.#abortController.signal
     }
 
+    /**
+     * Gets the current status of web search summarization.
+     * @returns {boolean} True if summarization is activated, otherwise false.
+     */
     getWebSearchSummarizationStatus() : boolean{
         return this.#isWebSearchSummarizationActivated
     }
 
+    /**
+     * Sets the status of web search summarization.
+     * @param {boolean} status - True to activate summarization, false to deactivate.
+     * @returns {void}
+     */
     setWebSearchSummarizationStatus(status : boolean) : void{
         this.#isWebSearchSummarizationActivated = status
     }

@@ -3,10 +3,19 @@ import IRAGChunkResponse from "../interfaces/responses/IRAGChunkResponse"
 import { AIModel } from "../models/AIModel"
 import { split } from 'sentence-splitter'
 
+/**
+ * Service for processing documents: chunking, embedding, sentence splitting, and semantic grouping.
+ * Provides utilities for text file validation and RAG data formatting.
+ */
 class DocProcessorService{
 
     static embeddingModel = new AIModel({modelName : "nomic-embed-text"})
 
+    /**
+     * Processes a text file, splitting it into chunks and generating embeddings for each chunk.
+     * @param {string} fileContent - The content of the text file.
+     * @returns {Promise<Array<{text: string, embedding: number[]}>>}
+     */
     static async processTextFile(fileContent : string) : Promise<{text : string, embedding : number[]}[]>{
         const chunks = this.splitTextIntoChunks(fileContent, 600 /* words */)
         const chunksEmbeddings = []
@@ -17,6 +26,12 @@ class DocProcessorService{
         return chunksEmbeddings
     }
 
+    /**
+     * Splits text into chunks of a specified word length.
+     * @param {string} text - The input text.
+     * @param {number} [seqLength=600] - Number of words per chunk.
+     * @returns {string[]} Array of text chunks.
+     */
     static splitTextIntoChunks(text : string, seqLength : number = 600 /* words */) : string[] {
         const words = text.split(/\s+/)
         const sequences = []
@@ -38,6 +53,11 @@ class DocProcessorService{
         console.log(sentences);
     }*/
 
+    /**
+     * Splits text into sentences using sentence-splitter.
+     * @param {string} text - The input text.
+     * @returns {string[]} Array of sentences.
+     */
     static sentencesSplitter(text : string) : string[]{
         const sentences = split(text);
         // Process sentences for LLM input
@@ -52,19 +72,37 @@ class DocProcessorService{
         return extractedSentences
     }
 
-    static getCosineSimilarity(vecA : number[], vecB : number[]) {
+    
+    /**
+     * Calculates the cosine similarity between two vectors.
+     * @param {number[]} vecA - First vector.
+     * @param {number[]} vecB - Second vector.
+     * @returns {number} Cosine similarity value.
+     */
+    static getCosineSimilarity(vecA : number[], vecB : number[]): number {
         const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0)
         const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0))
         const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0))
         return dotProduct / (magnitudeA * magnitudeB)
     }
 
+    /**
+     * Generates and normalizes the embedding for a given text chunk.
+     * @param {string} chunk - The text chunk.
+     * @returns {Promise<{text: string} & IEmbeddingResponse>}
+     */
     static async getEmbeddingsForChunk(chunk : string) : Promise<{text : string} & IEmbeddingResponse> {
         const embeddings = (await this.embeddingModel.askEmbeddingsFor(this.toTelegraphicText(chunk))).embedding
         return {text  : chunk, embedding : this.normalizeVector(embeddings)}
     }
 
-    static async semanticChunking(text : string, threshold : number){
+    /**
+     * Chunks text semantically by sentence similarity, grouping similar sentences.
+     * @param {string} text - The input text.
+     * @param {number} threshold - Cosine similarity threshold for grouping.
+     * @returns {Promise<Array<{text: string, embedding: object}>>}
+     */
+    static async semanticChunking(text : string, threshold : number): Promise<Array<{ text: string; embedding: object }>>{
         const sentences = this.sentencesSplitter(text)
         const embedSentences : { text: string, embedding : number[] } [] = []
         for(const sentence of sentences){
@@ -75,7 +113,13 @@ class DocProcessorService{
         return await this.sentencesGroupingBySimilarity(embedSentences, threshold)
     }
 
-    static async sentencesGroupingBySimilarity(embedSentences : {text : string, embedding : number[]}[], threshold : number){
+    /**
+     * Groups embedded sentences by similarity threshold.
+     * @param {Array<{text: string, embedding: number[]}>} embedSentences - Sentences with embeddings.
+     * @param {number} threshold - Similarity threshold.
+     * @returns {Promise<Array<{text: string, embedding: object}>>}
+     */
+    static async sentencesGroupingBySimilarity(embedSentences : {text : string, embedding : number[]}[], threshold : number): Promise<Array<{ text: string; embedding: object }>>{
         const groupedSentences = []
         let concatSentence = ""
         if (embedSentences.length > 0){
@@ -117,18 +161,33 @@ class DocProcessorService{
         return sentencesWithEmbedding
     }
 
-    static normalizeVector(vector : number[]) {
+    /**
+     * Normalizes a vector to unit length and scales.
+     * @param {number[]} vector - The input vector.
+     * @returns {number[]} Normalized vector.
+     */
+    static normalizeVector(vector : number[]): number[] {
         const magnitude = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
         return vector.map(val => Math.round(val * 10000000 / magnitude));
     }
 
-    static convertTo2Bits(vector : number[]) {
+    /**
+     * Converts a vector to 2-bit representation (-1, 0, 1).
+     * @param {number[]} vector - The input vector.
+     * @returns {number[]} Vector with 2-bit values.
+     */
+    static convertTo2Bits(vector : number[]): number[] {
         return vector.map(val => {
             if(val == 0) return 0
             return val > 0 ? 1 : -1
         })
     }
 
+    /**
+     * Converts text to a telegraphic form by removing common stop words.
+     * @param {string} text - The input text.
+     * @returns {string} Telegraphic text.
+     */
     static toTelegraphicText(text : string) : string {
         const wordsToRemove = [
           'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
@@ -145,7 +204,13 @@ class DocProcessorService{
         return words.join(' ')
     }
 
-    static formatRAGDatas(contextSize : number, RAGDatas : IRAGChunkResponse []){
+    /**
+     * Formats RAG data for output, considering context size and priority.
+     * @param {number} contextSize - Allowed context size.
+     * @param {IRAGChunkResponse[]} RAGDatas - Array of RAG data chunks.
+     * @returns {string} Formatted RAG data string.
+     */
+    static formatRAGDatas(contextSize : number, RAGDatas : IRAGChunkResponse []): string{
         // consider the context length of the agent to determine the quantity of datas to keep
         // 1500 is the estimated maximum size of a chunk
         // const nChunksAllowed = Math.floor(ChatService.getActiveAgent().getContextSize() / 1500)
@@ -155,7 +220,12 @@ class DocProcessorService{
         return RAGDatas == null ? "" : RAGDataIntroductionPrompt + RAGDatas.slice(0, nChunksAllowed).map((RAGDoc, id) => '\n'+ priority[id] + RAGDoc.text + '.\n').join(" ") + "My query :\n"
     }
 
-    static isTextFile(file : File) {
+    /**
+     * Checks if a file is a text file by inspecting its first 1KB for printable ASCII characters.
+     * @param {File} file - The file to check.
+     * @returns {Promise<boolean>} True if the file is a text file, else false.
+     */
+    static isTextFile(file : File): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const reader = new FileReader()
             reader.onload = function(e : ProgressEvent<FileReader>) {

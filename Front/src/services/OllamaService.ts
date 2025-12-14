@@ -1,34 +1,46 @@
 import { IListModelResponse, IRunningModelsResponse } from "../interfaces/responses/OllamaResponseTypes";
 
 
+/**
+ * Service class for interacting with the Ollama API.
+ */
 export class OllamaService{
-    static async getModelList() : Promise<IListModelResponse | undefined>{
-        const url = "/ollama/api/tags"
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-              throw new Error(`Response status: ${response.status}`);
-            }
-            const json = await response.json();
-            return json
-        } catch (error) {
-            console.error(error);
-        }
-    }
 
-    static async getRunningModelInfos() : Promise<IRunningModelsResponse | undefined>{
-        const url = "/ollama/api/ps"
-        try {
-            const response = await fetch(url);
-            if (!response.ok) {
-              throw new Error(`Response status: ${response.status}`);
-            }
-            const json = await response.json();
-            return json
-        } catch (error) {
-            console.error(error);
+  /**
+   * Fetches the list of available models from the Ollama API.
+   * @returns {Promise<IListModelResponse|undefined>} Resolves with the model list response or undefined on error.
+   */
+  static async getModelList() : Promise<IListModelResponse | undefined>{
+    const url = "/ollama/api/tags"
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Response status: ${response.status}`);
         }
+        const json = await response.json();
+        return json
+    } catch (error) {
+        console.error(error);
     }
+  }
+
+  /**
+   * Fetches information about currently running models from the Ollama API.
+   * @returns {Promise<IRunningModelsResponse|undefined>} Resolves with the running models response or undefined on error.
+   */
+  static async getRunningModelInfos() : Promise<IRunningModelsResponse | undefined>{
+    const url = "/ollama/api/ps"
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Response status: ${response.status}`);
+        }
+        const json = await response.json();
+        return json
+    } catch (error) {
+        console.error(error);
+    }
+  }
 }
 
 /*
